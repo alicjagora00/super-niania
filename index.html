@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F4FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Super Niania – projekt aplikacji</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#F6F4FF; --ink:#24203A; --muted:#5E5A72; --soft:#4A4560; --violet:#6C4CE0; --violet-ink:#4A3A9E; --link:#5B3FD0; --lilac:#E9E4FD; --lilac2:#F1EEFC; --line:#D9D1FA; --mint:#E2F5EC; --green:#17704A; --peach:#FFEDE5; --rust:#9A3A15; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #E9E4FD; }
+  body { font-family: 'Nunito', system-ui, sans-serif; color: var(--ink); -webkit-tap-highlight-color: transparent; }
+  a { color: var(--link); }
+  button { font-family: inherit; cursor: pointer; }
+  .wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; background: var(--bg); display: flex; flex-direction: column; position: relative; }
+  .content { flex: 1; padding: calc(20px + env(safe-area-inset-top)) 20px 20px; display: flex; flex-direction: column; gap: 18px; }
+  .head { display: flex; align-items: center; gap: 12px; }
+  .back { width: 44px; height: 44px; border-radius: 14px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; text-decoration: none; }
+  h1 { margin: 0; font-size: 24px; font-weight: 800; }
+  h2 { margin: 0; font-size: 17px; font-weight: 800; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .card { background: #fff; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 56px; border-radius: 16px; background: var(--violet); color: #fff; font-size: 17px; font-weight: 800; border: 0; text-decoration: none; width: 100%; }
+  .btn.alt { background: #fff; color: var(--link); border: 2px solid var(--line); }
+  .btn.soft { background: var(--lilac2); color: var(--violet-ink); height: 48px; font-size: 16px; }
+  .bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #ECE8FA; padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); display: flex; gap: 14px; align-items: center; z-index: 5; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { padding: 8px 14px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font-size: 14px; font-weight: 700; color: #3D2E8C; }
+  .tog { height: 40px; padding: 0 14px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font-size: 14px; font-weight: 700; color: #3D2E8C; display: inline-flex; align-items: center; gap: 6px; }
+  .tog.on { background: var(--violet); border-color: var(--violet); color: #fff; font-weight: 800; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 800; }
+  .b-green { background: var(--mint); color: var(--green); }
+  .b-lilac { background: var(--lilac2); color: var(--violet-ink); font-weight: 700; }
+  .b-peach { background: var(--peach); color: #8A3412; font-weight: 700; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: #1E9E63; }
+  .avatar { border-radius: 18px; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--lilac); border-radius: 14px; }
+  .seg button { height: 42px; border: 0; border-radius: 11px; background: transparent; color: var(--muted); font-size: 15px; font-weight: 700; }
+  .seg button.on { background: #fff; color: var(--ink); font-weight: 800; box-shadow: 0 2px 8px rgba(60,40,140,.12); }
+  .nanny { display: flex; gap: 14px; padding: 16px; background: #fff; border-radius: 18px; text-decoration: none; color: var(--ink); box-shadow: 0 4px 16px rgba(60,40,140,.06); }
+  .nav { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-top: 1px solid #ECE8FA; padding: 8px 8px calc(10px + env(safe-area-inset-bottom)); z-index: 5; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; color: var(--muted); font-size: 12px; font-weight: 700; text-decoration: none; }
+  .nav a.on { color: var(--link); font-weight: 800; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label, .lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .input { height: 48px; border-radius: 12px; border: 1.5px solid var(--line); padding: 0 14px; font-family: inherit; font-size: 16px; font-weight: 700; color: var(--ink); background: #fff; width: 100%; }
+  textarea.input { height: auto; padding: 12px 14px; font-weight: 600; font-size: 15px; resize: none; }
+  .step { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 16px; padding: 14px; }
+  .num { width: 32px; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; font-weight: 800; }
+  .stepper { display: flex; align-items: center; justify-content: space-between; }
+  .stepper button { width: 44px; height: 44px; border: 0; border-radius: 12px; background: var(--lilac2); color: var(--violet-ink); font-size: 22px; font-weight: 800; }
+  .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .slot { height: 44px; border-radius: 12px; border: 1.5px solid #DCD6F2; background: #fff; color: var(--muted); font-size: 15px; font-weight: 700; }
+  .slot.on { background: var(--green); border-color: var(--green); color: #fff; font-weight: 800; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day { height: 62px; border: 0; border-radius: 14px; background: #fff; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .day.on { background: var(--violet); color: #fff; }
+  .switch { display: flex; align-items: center; gap: 14px; padding: 16px; border: 0; border-radius: 18px; background: #fff; color: var(--ink); text-align: left; width: 100%; }
+  .switch.on { background: var(--green); color: #fff; }
+  .knob { width: 52px; height: 30px; border-radius: 999px; background: #DCD6F2; display: flex; align-items: center; padding: 3px; flex-shrink: 0; }
+  .knob span { width: 24px; height: 24px; border-radius: 999px; background: #fff; }
+  .switch.on .knob { background: #fff; justify-content: flex-end; }
+  .switch.on .knob span { background: var(--green); }
+  .map { position: relative; height: 100vh; height: 100dvh; overflow: hidden; background: #EEF1EA; }
+  .pin { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px 0 4px; border: 0; border-radius: 999px; background: #fff; color: var(--ink); box-shadow: 0 4px 12px rgba(60,40,140,.18); font-size: 14px; font-weight: 800; }
+  .pin .av { width: 32px; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .pin.on { background: var(--violet); color: #fff; box-shadow: 0 6px 16px rgba(60,40,140,.35); z-index: 2; }
+  .pin.on .av { background: #fff !important; color: var(--violet-ink) !important; }
+  .demo { text-align: center; font-size: 12px; color: var(--muted); padding: 10px 20px 4px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function () {
+  var I = {
+    back: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#24203A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    check: function (c, s, w) { return '<svg width="' + (s || 14) + '" height="' + (s || 14) + '" viewBox="0 0 24 24" fill="none" stroke="' + (c || '#17704A') + '" stroke-width="' + (w || 3) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'; },
+    star: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#F5A524" stroke="#F5A524" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9L12 3.5z"/></svg>',
+    pinI: function (c) { return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + (c || '#6C4CE0') + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'; },
+    shield: function (c) { return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="' + c + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>'; },
+    idc: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17704A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h3"/></svg>',
+    clock: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B5461C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    house: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M12 17s-3-1.8-3-3.8A1.7 1.7 0 0 1 12 12a1.7 1.7 0 0 1 3 1.2c0 2-3 3.8-3 3.8z"/></svg>',
+    map: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg>',
+    upload: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6C4CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
+    camera: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#6C4CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    search: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+    cal: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+    msg: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg>',
+    user: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'
+  };
+
+  var NIANIE = [
+    { ini: 'MK', name: 'Magda, 26 l.', rate: 35, rating: '4,9', ops: '23 opinie', km: '1,2 km', now: 'Wolna od 17:30', later: 'Pn–Pt, 8:00–16:00', tag: 'Pierwsza pomoc', bg: '#E9E4FD', fg: '#4A3A9E', x: 62, y: 40 },
+    { ini: 'KW', name: 'Kasia, 31 l.', rate: 40, rating: '5,0', ops: '41 opinii', km: '2,4 km', now: 'Wolna od 18:00', later: 'Pn, Śr, Pt', tag: 'Pedagog', bg: '#FFEDE5', fg: '#9A3A15', x: 24, y: 30 },
+    { ini: 'TN', name: 'Pani Teresa, 58 l.', rate: 38, rating: '5,0', ops: '67 opinii', km: '4,0 km', now: 'Wolna od 16:00', later: 'Codziennie rano', tag: '20 lat doświadczenia', bg: '#E2F5EC', fg: '#17704A', x: 76, y: 58 },
+    { ini: 'OL', name: 'Ola, 22 l.', rate: 30, rating: '4,8', ops: '12 opinii', km: '3,1 km', now: 'Wolna od 19:00', later: 'Weekendy', tag: 'Angielski', bg: '#FFF4D6', fg: '#7A5600', x: 22, y: 54 }
+  ];
+
+  var weekday = [], weekend = [];
+  for (var j = 0; j < 16; j++) { weekday.push(j >= 10 && j <= 14); weekend.push(j >= 2 && j <= 9); }
+  var S = {
+    mode: 'teraz', sel: 0, hours: 4, sent: false, now: true, day: 2, rate: 35,
+    grid: [0, 1, 2, 3, 4, 5, 6].map(function (i) { return (i >= 5 ? weekend : weekday).slice(); }),
+    picked: {
+      edu: ['W trakcie studiów pedagogicznych'], exp: ['3–5 lat'], age: ['1–3 lata', '3–6 lat'],
+      act: ['Zabawy plastyczne', 'Czytanie bajek', 'Spacery i plac zabaw', 'Usypianie'],
+      hob: ['Rysowanie', 'Przyroda'], extra: ['Kurs pierwszej pomocy', 'Nie palę']
+    }
+  };
+  var GROUPS = [
+    { key: 'edu', title: 'Wykształcenie', hint: 'wybierz 1', single: true, opts: ['Średnie', 'Studia pedagogiczne', 'W trakcie studiów pedagogicznych', 'Inne studia', 'Kurs opiekunki dziecięcej'] },
+    { key: 'exp', title: 'Doświadczenie z dziećmi', hint: 'wybierz 1', single: true, opts: ['Do 1 roku', '1–3 lata', '3–5 lat', 'Ponad 5 lat'] },
+    { key: 'age', title: 'Wiek dzieci', hint: 'możesz kilka', opts: ['Niemowlęta (0–1)', '1–3 lata', '3–6 lat', '6–10 lat', '10+ lat'] },
+    { key: 'act', title: 'Co robię z dziećmi', hint: 'możesz kilka', opts: ['Zabawy plastyczne', 'Czytanie bajek', 'Spacery i plac zabaw', 'Pomoc w lekcjach', 'Gotowanie posiłków', 'Nauka angielskiego', 'Gry planszowe', 'Muzyka i śpiew', 'Sport i ruch', 'Usypianie'] },
+    { key: 'hob', title: 'Moje zainteresowania', hint: 'możesz kilka', opts: ['Rysowanie', 'Muzyka', 'Sport', 'Książki', 'Przyroda', 'Taniec', 'Gotowanie', 'Języki obce'] },
+    { key: 'extra', title: 'Dodatkowo', hint: 'możesz kilka', opts: ['Kurs pierwszej pomocy', 'Prawo jazdy', 'Własny samochód', 'Nie palę', 'Lubię zwierzęta', 'Opieka nad chorym dzieckiem'] }
+  ];
+
+  function back(to, label) { return '<a class="back" href="#' + to + '" aria-label="' + (label || 'Wróć') + '">' + I.back + '</a>'; }
+  function nav(on) {
+    var items = [['szukaj', 'Szukaj', I.search], ['rezerwacja', 'Rezerwacje', I.cal], ['profil', 'Wiadomości', I.msg], ['abonament', 'Konto', I.user]];
+    return '<nav class="nav" aria-label="Menu główne">' + items.map(function (it) {
+      return '<a href="#' + it[0] + '" class="' + (it[0] === on ? 'on' : '') + '">' + it[2] + it[1] + '</a>';
+    }).join('') + '</nav>';
+  }
+  var DEMO = '<div class="demo">Projekt poglądowy – dane są przykładowe</div>';
+
+  var screens = {
+    start: function () {
+      function row(bg, icon, t, s) {
+        return '<div style="display:flex;gap:14px;align-items:flex-start"><div style="width:36px;height:36px;flex-shrink:0;border-radius:12px;background:' + bg + ';display:flex;align-items:center;justify-content:center">' + icon + '</div><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:700">' + t + '</span><span class="muted" style="font-size:14px;line-height:1.4">' + s + '</span></div></div>';
+      }
+      return '<div class="content" style="gap:28px;padding-top:calc(40px + env(safe-area-inset-top))">' +
+        '<div style="display:flex;align-items:center;gap:10px"><div style="width:44px;height:44px;border-radius:14px;background:#6C4CE0;display:flex;align-items:center;justify-content:center">' + I.house + '</div><span style="font-size:22px;font-weight:800">Super Niania</span></div>' +
+        '<div style="display:flex;flex-direction:column;gap:12px"><h1 style="font-size:34px;line-height:1.12;letter-spacing:-.5px">Sprawdzona niania, kiedy jej potrzebujesz</h1><p class="muted" style="font-size:17px;line-height:1.5">Na stałe albo na już – nawet w ciągu 2 godzin. Każda niania przechodzi weryfikację, zanim ją zobaczysz.</p></div>' +
+        '<div class="card" style="gap:16px;box-shadow:0 6px 24px rgba(60,40,140,.08)">' +
+          row('#E2F5EC', I.idc, 'Potwierdzona tożsamość', 'Każda niania weryfikuje się przez bank') +
+          row('#E2F5EC', I.shield('#17704A'), 'Niekaralność sprawdzona', 'Zaświadczenie z KRK i rejestr sprawców') +
+          row('#FFEDE5', I.clock, 'Niania na teraz', 'Zobacz, kto jest wolny dziś w Twojej okolicy') +
+        '</div>' +
+        '<div style="flex:1"></div>' +
+        '<div style="display:flex;flex-direction:column;gap:12px"><a class="btn" href="#szukaj">Szukam niani</a><a class="btn alt" href="#weryfikacja">Jestem nianią</a><p class="muted" style="text-align:center;font-size:15px;margin-top:4px">Masz już konto? <a href="#szukaj" style="font-weight:700">Zaloguj się</a></p></div>' +
+        '</div>' + DEMO;
+    },
+
+    szukaj: function () {
+      var t = S.mode === 'teraz';
+      var chips = t ? ['Dziś', 'Od 18:00', '1 dziecko, 3 lata'] : ['Od grudnia', 'Pn–Pt', '1 dziecko, 3 lata'];
+      return '<div class="content" style="gap:14px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;flex-direction:column;gap:2px"><span class="muted" style="font-size:14px">Twoja okolica</span><span style="font-size:18px;font-weight:800;display:flex;align-items:center;gap:6px">' + I.pinI() + 'Lublin, do 5 km</span></div>' +
+        '<a href="#abonament" style="padding:8px 12px;border-radius:999px;background:#FFEDE5;color:#9A3A15;font-size:13px;font-weight:800;text-decoration:none">Abonament aktywny</a></div>' +
+        '<div class="seg"><button data-act="mode:teraz" class="' + (t ? 'on' : '') + '">Na teraz</button><button data-act="mode:dluzej" class="' + (t ? '' : 'on') + '">Na dłużej</button></div>' +
+        '<div class="chips">' + chips.map(function (c) { return '<span class="chip">' + c + '</span>'; }).join('') + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:15px;font-weight:700">' + (t ? '4 nianie wolne dziś wieczorem' : '4 nianie szukają stałej opieki') + '</span>' +
+        '<a href="#mapa" style="display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:12px;background:#6C4CE0;color:#fff;font-size:14px;font-weight:800;text-decoration:none;flex-shrink:0">' + I.map + 'Mapa</a></div>' +
+        NIANIE.map(function (n) {
+          return '<a class="nanny" href="#profil"><div style="position:relative;flex-shrink:0"><div class="avatar" style="width:56px;height:56px;background:' + n.bg + ';color:' + n.fg + ';font-size:20px">' + n.ini + '</div>' +
+            '<div style="position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:999px;background:#17704A;border:2px solid #fff;display:flex;align-items:center;justify-content:center" title="Zweryfikowana">' + I.check('#fff', 12, 3.5) + '</div></div>' +
+            '<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-size:17px;font-weight:800">' + n.name + '</span><span style="font-size:15px;font-weight:800;color:#5B3FD0">' + n.rate + ' zł/h</span></div>' +
+            '<span class="muted" style="font-size:14px;display:flex;align-items:center;gap:4px">' + I.star + n.rating + ' (' + n.ops + ') · ' + n.km + '</span>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"><span class="badge b-green"><span class="dot"></span>' + (t ? n.now : n.later) + '</span><span class="badge b-lilac">' + n.tag + '</span></div></div></a>';
+        }).join('') +
+        '</div>' + nav('szukaj');
+    },
+
+    mapa: function () {
+      var s = NIANIE[S.sel];
+      return '<div class="map">' +
+        '<svg viewBox="0 0 390 844" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%" aria-hidden="true">' +
+          '<rect x="196" y="282" width="120" height="78" rx="18" fill="#CDE7D3"/><rect x="22" y="548" width="96" height="70" rx="16" fill="#CDE7D3"/><rect x="250" y="120" width="90" height="60" rx="14" fill="#CDE7D3"/>' +
+          '<path d="M-20 520 C 70 468, 150 560, 240 500 S 360 430, 410 462" fill="none" stroke="#BBD7EF" stroke-width="26"/>' +
+          '<g stroke="#FFFFFF"><path d="M0 214 L390 268" stroke-width="12"/><path d="M0 400 L390 384" stroke-width="12"/><path d="M0 668 L390 618" stroke-width="12"/><path d="M132 0 L176 844" stroke-width="12"/><path d="M312 0 L268 844" stroke-width="12"/><path d="M0 310 L390 330" stroke-width="6"/><path d="M60 0 L80 844" stroke-width="6"/><path d="M220 0 L226 844" stroke-width="6"/><path d="M0 560 L390 540" stroke-width="6"/></g>' +
+        '</svg>' +
+        '<div style="position:absolute;left:49%;top:48%;width:300px;height:300px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(108,76,224,.07);border:2px dashed #6C4CE0"></div>' +
+        '<div style="position:absolute;left:49%;top:48%;width:44px;height:44px;transform:translate(-50%,-50%);border-radius:50%;background:rgba(108,76,224,.18)"></div>' +
+        '<div style="position:absolute;left:49%;top:48%;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:#6C4CE0;border:3px solid #fff"></div>' +
+        '<span style="position:absolute;left:calc(49% + 14px);top:calc(48% - 10px);padding:3px 8px;border-radius:8px;background:#fff;font-size:12px;font-weight:800;color:#4A3A9E">Ty</span>' +
+        NIANIE.map(function (n, i) {
+          return '<button class="pin ' + (i === S.sel ? 'on' : '') + '" data-act="sel:' + i + '" style="left:' + n.x + '%;top:' + n.y + '%" aria-pressed="' + (i === S.sel) + '"><span class="av" style="background:' + n.bg + ';color:' + n.fg + '">' + n.ini + '</span>' + n.rate + ' zł</button>';
+        }).join('') +
+        '<div style="position:absolute;left:0;right:0;top:0;padding:calc(16px + env(safe-area-inset-top)) 16px 0;display:flex;flex-direction:column;gap:10px">' +
+          '<div style="display:flex;gap:10px;align-items:center">' + back('szukaj', 'Wróć do listy').replace('class="back"', 'class="back" style="width:48px;height:48px;box-shadow:0 4px 12px rgba(60,40,140,.12)"') +
+          '<div style="flex:1;height:48px;border-radius:16px;background:#fff;display:flex;align-items:center;gap:8px;padding:0 14px;box-shadow:0 4px 12px rgba(60,40,140,.12)">' + I.pinI() + '<span style="font-size:15px;font-weight:800">Lublin · do 5 km · dziś</span></div></div>' +
+          '<div class="chips"><span class="badge" style="background:#17704A;color:#fff;padding:7px 12px">4 wolne teraz</span><span class="chip" style="padding:6px 12px;font-size:13px;border:0">Do 40 zł/h</span><span class="chip" style="padding:6px 12px;font-size:13px;border:0">Filtry</span></div>' +
+        '</div>' +
+        '<div style="position:absolute;left:12px;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));background:#fff;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(60,40,140,.18)">' +
+          '<div style="display:flex;gap:12px;align-items:center"><div class="avatar" style="width:56px;height:56px;background:' + s.bg + ';color:' + s.fg + ';font-size:20px">' + s.ini + '</div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:17px;font-weight:800">' + s.name + '</span><span style="font-size:15px;font-weight:800;color:#5B3FD0">' + s.rate + ' zł/h</span></div>' +
+          '<span class="muted" style="font-size:14px;display:flex;align-items:center;gap:4px">' + I.star + s.rating + ' · ' + s.km + ' od Ciebie</span><span style="font-size:13px;font-weight:800;color:#17704A">' + s.now + ' · zweryfikowana</span></div></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><a class="btn soft" href="#profil">Zobacz profil</a><a class="btn" style="height:48px;font-size:16px" href="#rezerwacja">Zarezerwuj</a></div>' +
+        '</div></div>';
+    },
+
+    profil: function () {
+      var checks = [['Tożsamość potwierdzona', 'Weryfikacja przez bank'], ['Niekaralność sprawdzona', 'Zaświadczenie z KRK, ważne do 03.2027'], ['Brak wpisu w rejestrze sprawców', 'Sprawdzane co 3 miesiące'], ['Kurs pierwszej pomocy', 'Certyfikat z 2026 r.']];
+      var acts = ['Zabawy plastyczne', 'Czytanie bajek', 'Spacery i plac zabaw', 'Pomoc w lekcjach', 'Usypianie'];
+      var hobs = ['Rysowanie', 'Przyroda', 'Muzyka'];
+      return '<div style="background:#E9E4FD;padding:calc(20px + env(safe-area-inset-top)) 20px 24px;display:flex;flex-direction:column;gap:16px">' + back('szukaj', 'Wróć do wyszukiwania') +
+        '<div style="display:flex;gap:16px;align-items:center"><div class="avatar" style="width:84px;height:84px;border-radius:26px;background:#fff;color:#4A3A9E;font-size:30px">MK</div>' +
+        '<div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:26px">Magda, 26 l.</h1><span style="font-size:15px;color:#4A4560">Lublin · 1,2 km od Ciebie</span><span style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:5px">' + I.star + '4,9 · 23 opinie · 58 wizyt</span></div></div></div>' +
+        '<div class="content" style="padding-top:20px;gap:20px">' +
+        '<section class="card"><h2 style="display:flex;align-items:center;gap:8px">' + I.shield('#17704A') + 'Bezpieczeństwo</h2>' +
+          checks.map(function (c) { return '<div style="display:flex;gap:12px;align-items:flex-start"><div style="width:24px;height:24px;border-radius:999px;background:#E2F5EC;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + I.check() + '</div><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:15px;font-weight:700">' + c[0] + '</span><span class="muted small">' + c[1] + '</span></div></div>'; }).join('') + '</section>' +
+        '<section style="display:flex;flex-direction:column;gap:10px"><h2>O mnie</h2><p style="font-size:15px;line-height:1.55;color:#4A4560">Studiuję pedagogikę przedszkolną. Od 4 lat opiekuję się dziećmi od 1 do 8 lat. Lubię zabawy plastyczne, czytanie i spacery. Nie palę, mam własny samochód.</p></section>' +
+        '<section class="card" style="gap:12px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div style="display:flex;flex-direction:column;gap:2px"><span class="lbl">Wykształcenie</span><span style="font-size:15px;font-weight:800">Studia pedagogiczne (w trakcie)</span></div><div style="display:flex;flex-direction:column;gap:2px"><span class="lbl">Doświadczenie</span><span style="font-size:15px;font-weight:800">3–5 lat · dzieci 1–8 lat</span></div></div>' +
+          '<span class="lbl">Co robimy razem</span><div class="chips" style="gap:6px">' + acts.map(function (a) { return '<span class="badge b-lilac" style="padding:6px 12px;font-size:14px">' + a + '</span>'; }).join('') + '</div>' +
+          '<span class="lbl">Moje zainteresowania</span><div class="chips" style="gap:6px">' + hobs.map(function (a) { return '<span class="badge b-peach" style="padding:6px 12px;font-size:14px">' + a + '</span>'; }).join('') + '</div></section>' +
+        '<section style="display:flex;flex-direction:column;gap:10px"><h2>Dostępność dziś</h2><div class="chips"><span style="padding:8px 12px;border-radius:12px;background:#EEECF4;color:#6B6680;font-size:14px;font-weight:700;text-decoration:line-through">8:00–14:00</span><span style="padding:8px 12px;border-radius:12px;background:#E2F5EC;color:#17704A;font-size:14px;font-weight:800">17:30–23:00 wolna</span></div></section>' +
+        '<section style="display:flex;flex-direction:column;gap:10px"><h2>Opinie rodziców</h2><div class="card" style="gap:6px;padding:14px;border-radius:16px"><span style="font-size:14px;font-weight:800">Ania, mama Zosi (4 l.)</span><p style="font-size:14px;line-height:1.5;color:#4A4560">„Przyszła w godzinę, gdy wypadło mi nagłe spotkanie. Zosia nie chciała, żeby wychodziła!”</p></div></section>' +
+        '</div>' +
+        '<div class="bar"><div style="display:flex;flex-direction:column"><span style="font-size:20px;font-weight:800">35 zł/h</span><span class="muted small">płatne niani</span></div><a class="btn" style="height:54px;flex:1" href="#rezerwacja">Zarezerwuj</a></div>';
+    },
+
+    rezerwacja: function () {
+      var total = S.hours * 35;
+      if (S.sent) {
+        return '<div class="content" style="align-items:center;justify-content:center;text-align:center;gap:18px;padding-top:calc(48px + env(safe-area-inset-top))">' +
+          '<div style="width:96px;height:96px;border-radius:32px;background:#E2F5EC;display:flex;align-items:center;justify-content:center">' + I.check('#17704A', 48, 2.4) + '</div>' +
+          '<h1 style="font-size:28px">Prośba wysłana!</h1><p class="muted" style="font-size:16px;line-height:1.5">Magda zwykle odpowiada w ciągu 10 minut. Dostaniesz powiadomienie, gdy potwierdzi wizytę.</p>' +
+          '<div class="card" style="width:100%;gap:6px;text-align:left"><span class="lbl">Twoja rezerwacja</span><span style="font-size:16px;font-weight:800">Dziś, 18:00 · ' + S.hours + ' h · ' + total + ' zł</span><span class="muted" style="font-size:14px">Gdy niania przyjdzie i wyjdzie, dostaniesz powiadomienie.</span></div>' +
+          '<div style="flex:1"></div><button class="btn alt" data-act="unsend">Zmień rezerwację</button><a href="#szukaj" style="font-size:15px;font-weight:700">Wróć do wyszukiwania</a></div>';
+      }
+      return '<div class="content">' +
+        '<div class="head">' + back('profil', 'Wróć do profilu') + '<h1>Rezerwacja</h1></div>' +
+        '<div class="card" style="flex-direction:row;align-items:center;gap:12px;padding:14px;border-radius:18px"><div class="avatar" style="width:48px;height:48px;border-radius:16px;background:#E9E4FD;color:#4A3A9E;font-size:18px">MK</div><div style="display:flex;flex-direction:column"><span style="font-size:16px;font-weight:800">Magda, 26 l.</span><span style="font-size:13px;color:#17704A;font-weight:700">Zweryfikowana · wolna od 17:30</span></div></div>' +
+        '<div class="card" style="gap:16px;border-radius:18px;padding:16px">' +
+          '<div class="field"><label for="data">Kiedy</label><input class="input" id="data" value="Dziś, 25 listopada"></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="field"><label for="od">Od</label><input class="input" id="od" value="18:00"></div>' +
+          '<div class="field"><span class="lbl">Ile godzin</span><div class="stepper" style="height:48px;border-radius:12px;border:1.5px solid #D9D1FA;padding:0 2px"><button data-act="h:-1" aria-label="Mniej godzin" style="width:40px;height:40px">−</button><span style="font-size:16px;font-weight:800">' + S.hours + ' h</span><button data-act="h:1" aria-label="Więcej godzin" style="width:40px;height:40px">+</button></div></div></div>' +
+          '<div class="field"><label for="dz">Dzieci</label><input class="input" id="dz" value="1 dziecko – Zosia, 4 lata"></div>' +
+          '<div class="field"><label for="uw">Wiadomość dla niani</label><textarea class="input" id="uw" rows="3">Zosia ma alergię na orzechy. Kolacja jest w lodówce.</textarea></div>' +
+        '</div>' +
+        '<div style="background:#FFEDE5;border-radius:18px;padding:16px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;flex-direction:column"><span style="font-size:14px;color:#7A3412;font-weight:700">' + S.hours + ' h × 35 zł</span><span style="font-size:13px;color:#7A3412">płacisz niani po wizycie</span></div><span style="font-size:24px;font-weight:800;color:#7A3412">' + total + ' zł</span></div>' +
+        '</div><div class="bar"><button class="btn" data-act="send">Wyślij prośbę do Magdy</button></div>';
+    },
+
+    abonament: function () {
+      function feat(t, c) { return '<div style="display:flex;gap:10px;align-items:center;font-size:15px;font-weight:600">' + I.check(c, 18) + t + '</div>'; }
+      return '<div class="content">' +
+        '<div class="head">' + back('szukaj') + '<h1>Abonament</h1></div>' +
+        '<p class="muted" style="font-size:16px;line-height:1.5">Jedna stała opłata miesięcznie. Bez prowizji od wizyt – za opiekę płacisz bezpośrednio niani.</p>' +
+        '<section style="background:#6C4CE0;color:#fff;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:20px">Dla rodzica</h2><span style="padding:5px 10px;border-radius:999px;background:#fff;color:#4A3A9E;font-size:12px;font-weight:800">Twój plan</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:40px;font-weight:800;letter-spacing:-1px">19,99 zł</span><span style="font-size:15px;font-weight:600">/ miesiąc</span></div>' +
+          ['Wszystkie zweryfikowane nianie', 'Niania na teraz – nawet za 2 godz.', 'Czat i rezerwacje bez limitu', 'Powiadomienie o wejściu i wyjściu niani'].map(function (t) { return feat(t, '#fff'); }).join('') + '</section>' +
+        '<section style="background:#fff;border:2px solid #D9D1FA;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:14px"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:20px">Dla niani</h2><span class="badge b-green" style="font-size:12px">1. miesiąc gratis</span></div>' +
+          '<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:40px;font-weight:800;letter-spacing:-1px">19,99 zł</span><span class="muted" style="font-size:15px;font-weight:600">/ miesiąc</span></div>' +
+          ['Profil widoczny dla rodziców', 'Odznaka „Zweryfikowana”', 'Powiadomienia o nowych zleceniach', 'Kalendarz dostępności'].map(function (t) { return feat(t, '#17704A'); }).join('') +
+          '<a class="btn soft" href="#weryfikacja">Zostań nianią</a></section>' +
+        '<p class="muted small" style="text-align:center;line-height:1.5">Możesz zrezygnować w każdej chwili. Płatność kartą, BLIK lub Apple/Google Pay.</p>' +
+        '</div>' + nav('abonament');
+    },
+
+    weryfikacja: function () {
+      function done(t, s) { return '<div class="step"><div class="num" style="background:#E2F5EC">' + I.check('#17704A', 16) + '</div><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800">' + t + '</span><span class="muted small">' + s + '</span></div></div>'; }
+      function todo(n, t, s) { return '<div class="step" style="opacity:.75"><div class="num" style="background:#EEECF4;color:#5E5A72">' + n + '</div><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800">' + t + '</span><span class="muted small">' + s + '</span></div></div>'; }
+      return '<div class="content">' +
+        '<div class="head">' + back('start') + '<div style="display:flex;flex-direction:column"><span class="lbl">Krok 3 z 5</span><h1 style="font-size:22px">Zostań Super Nianią</h1></div></div>' +
+        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px" aria-hidden="true"><div style="height:6px;border-radius:9px;background:#17704A"></div><div style="height:6px;border-radius:9px;background:#17704A"></div><div style="height:6px;border-radius:9px;background:#6C4CE0"></div><div style="height:6px;border-radius:9px;background:#DCD6F2"></div><div style="height:6px;border-radius:9px;background:#DCD6F2"></div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px">' +
+          done('Dane podstawowe', 'Imię, telefon, miasto') + done('Tożsamość potwierdzona', 'Przez logowanie do Twojego banku') +
+          '<div class="card" style="border:2px solid #6C4CE0;padding:16px;border-radius:18px"><div style="display:flex;gap:12px;align-items:center"><div class="num" style="background:#6C4CE0;color:#fff">3</div><span style="font-size:16px;font-weight:800">Zaświadczenie o niekaralności</span></div>' +
+            '<p style="font-size:14px;line-height:1.5;color:#4A4560">Pobierz e-zaświadczenie z Krajowego Rejestru Karnego (zajmuje ok. 15 minut) i dodaj plik PDF. Sprawdzimy jego autentyczność.</p>' +
+            '<button style="height:110px;border-radius:14px;border:2px dashed #B9ACF0;background:#F6F4FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#4A3A9E">' + I.upload + '<span style="font-size:15px;font-weight:800">Dodaj plik PDF</span></button>' +
+            '<a href="#weryfikacja" style="font-size:14px;font-weight:700">Jak pobrać zaświadczenie? Pokażemy krok po kroku</a></div>' +
+          todo(4, 'Rejestr sprawców przestępstw', 'Sprawdzimy to za Ciebie') + todo(5, 'Profil i dostępność', 'Wykształcenie, zajęcia z dziećmi, stawka, kalendarz') +
+        '</div></div><div class="bar"><a class="btn" href="#profilniani">Dalej</a></div>';
+    },
+
+    profilniani: function () {
+      return '<div class="content" style="gap:20px">' +
+        '<div class="head">' + back('weryfikacja') + '<div style="display:flex;flex-direction:column"><span class="lbl">Krok 5 z 5</span><h1 style="font-size:22px">Twój profil</h1></div></div>' +
+        '<div style="display:flex;gap:14px;align-items:center"><div style="width:76px;height:76px;border-radius:24px;background:#E9E4FD;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + I.camera + '</div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn" style="height:40px;font-size:15px;width:auto;padding:0 14px;border-radius:12px">Dodaj zdjęcie</button><span class="muted small">Uśmiechnięte zdjęcie twarzy buduje zaufanie</span></div></div>' +
+        '<div class="field"><label for="om" style="font-size:16px;font-weight:800;color:#24203A">O mnie</label><textarea class="input" id="om" rows="3">Studiuję pedagogikę przedszkolną. Od 4 lat opiekuję się dziećmi.</textarea></div>' +
+        GROUPS.map(function (g, gi) {
+          var picked = S.picked[g.key] || [];
+          return '<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:16px;font-weight:800">' + g.title + '</span><span class="muted small">' + g.hint + '</span></div><div class="chips">' +
+            g.opts.map(function (o, oi) {
+              var on = picked.indexOf(o) >= 0;
+              return '<button class="tog ' + (on ? 'on' : '') + '" data-act="pick:' + gi + ':' + oi + '" aria-pressed="' + on + '">' + (on ? I.check('#fff', 14, 3.2) : '') + o + '</button>';
+            }).join('') + '</div></div>';
+        }).join('') +
+        '<div class="card"><span style="font-size:16px;font-weight:800">Moja stawka</span><div class="stepper"><button data-act="rate:-1" aria-label="Obniż stawkę" style="width:52px;height:52px;border-radius:16px;font-size:24px">−</button><div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:34px;font-weight:800;letter-spacing:-.5px">' + S.rate + ' zł</span><span class="muted small">za godzinę</span></div><button data-act="rate:1" aria-label="Podnieś stawkę" style="width:52px;height:52px;border-radius:16px;font-size:24px">+</button></div>' +
+        '<span class="muted small" style="text-align:center">Ustalasz ją sama i możesz ją zmienić w każdej chwili. Rodzic płaci Ci bezpośrednio.</span></div>' +
+        '</div><div class="bar"><a class="btn" href="#kalendarz">Dalej: moja dostępność</a></div>';
+    },
+
+    kalendarz: function () {
+      var names = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'];
+      var full = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela'];
+      var row = S.grid[S.day];
+      var count = row.filter(Boolean).length;
+      return '<div class="content">' +
+        '<div class="head">' + back('profilniani') + '<h1>Moja dostępność</h1></div>' +
+        '<button class="switch ' + (S.now ? 'on' : '') + '" data-act="now" aria-pressed="' + S.now + '"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:800">' + (S.now ? 'Jestem dostępna teraz' : 'Teraz niedostępna') + '</span><span style="font-size:14px;font-weight:600;' + (S.now ? '' : 'color:#5E5A72') + '">' + (S.now ? 'Rodzice w okolicy widzą Cię w „Niania na teraz”' : 'Włącz, gdy możesz przyjąć zlecenie od ręki') + '</span></div><div class="knob"><span></span></div></button>' +
+        '<h2>Plan tygodnia</h2>' +
+        '<div class="days">' + names.map(function (n, i) { return '<button class="day ' + (i === S.day ? 'on' : '') + '" data-act="day:' + i + '"><span style="font-size:12px;font-weight:700">' + n + '</span><span style="font-size:17px;font-weight:800">' + (23 + i) + '</span></button>'; }).join('') + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="muted" style="font-size:14px">Wolne godziny – ' + full[S.day] + '</span><div style="display:flex;gap:6px"><button data-act="all:1" style="height:34px;padding:0 10px;border:0;border-radius:10px;background:#F1EEFC;color:#4A3A9E;font-size:13px;font-weight:800">Cały dzień</button><button data-act="all:0" style="height:34px;padding:0 10px;border:0;border-radius:10px;background:#fff;color:#5E5A72;font-size:13px;font-weight:800">Wyczyść</button></div></div>' +
+        '<span class="muted small">Każde pole to 1 godzina, np. 17:00 = 17:00–18:00</span>' +
+        '<div class="slots">' + row.map(function (on, j) { return '<button class="slot ' + (on ? 'on' : '') + '" data-act="slot:' + j + '" aria-pressed="' + on + '">' + (7 + j) + ':00</button>'; }).join('') + '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><a href="#profilniani" class="card" style="padding:14px;border-radius:16px;gap:2px;text-decoration:none;color:#24203A"><span class="lbl">Moja stawka (zmień)</span><span style="font-size:20px;font-weight:800">' + S.rate + ' zł/h</span></a><div class="card" style="padding:14px;border-radius:16px;gap:2px"><span class="lbl">Dojadę do</span><span style="font-size:20px;font-weight:800">5 km</span></div></div>' +
+        '</div><div class="bar"><a class="btn" href="#start">Zapisz – ' + count + ' h w tym dniu</a></div>';
+    }
+  };
+
+  var app = document.getElementById('app');
+  var current = null;
+  function render(keepScroll) {
+    var name = (location.hash || '#start').slice(1);
+    if (!screens[name]) name = 'start';
+    var y = window.scrollY;
+    app.innerHTML = '<div class="wrap">' + screens[name]() + '</div>';
+    if (keepScroll && name === current) window.scrollTo(0, y); else window.scrollTo(0, 0);
+    current = name;
+  }
+
+  app.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el) return;
+    var p = el.getAttribute('data-act').split(':');
+    var a = p[0], v = p[1];
+    if (a === 'mode') S.mode = v;
+    else if (a === 'sel') S.sel = +v;
+    else if (a === 'h') S.hours = Math.min(12, Math.max(1, S.hours + (+v)));
+    else if (a === 'send') S.sent = true;
+    else if (a === 'unsend') S.sent = false;
+    else if (a === 'rate') S.rate = Math.min(150, Math.max(20, S.rate + (+v)));
+    else if (a === 'now') S.now = !S.now;
+    else if (a === 'day') S.day = +v;
+    else if (a === 'slot') S.grid[S.day][+v] = !S.grid[S.day][+v];
+    else if (a === 'all') S.grid[S.day] = S.grid[S.day].map(function () { return v === '1'; });
+    else if (a === 'pick') {
+      var g = GROUPS[+v], o = g.opts[+p[2]], cur = S.picked[g.key] || [];
+      if (g.single) S.picked[g.key] = [o];
+      else S.picked[g.key] = cur.indexOf(o) >= 0 ? cur.filter(function (x) { return x !== o; }) : cur.concat([o]);
+    }
+    render(true);
+  });
+  window.addEventListener('hashchange', function () { render(false); });
+  render(false);
+})();
+</script>
+</body>
+</html>
