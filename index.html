@@ -72,6 +72,8 @@
   .pin .av { width: 32px; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
   .pin.on { background: var(--violet); color: #fff; box-shadow: 0 6px 16px rgba(60,40,140,.35); z-index: 2; }
   .pin.on .av { background: #fff !important; color: var(--violet-ink) !important; }
+  .spin { width: 18px; height: 18px; border: 3px solid #D9D1FA; border-top-color: #6C4CE0; border-radius: 50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
   .demo { text-align: center; font-size: 12px; color: var(--muted); padding: 10px 20px 4px; }
 </style>
 </head>
@@ -108,6 +110,8 @@
   for (var j = 0; j < 16; j++) { weekday.push(j >= 10 && j <= 14); weekend.push(j >= 2 && j <= 9); }
   var S = {
     mode: 'teraz', sel: 0, hours: 4, sent: false, now: true, day: 2, rate: 35,
+    reg: { step: 1, id: null, bank: '', file: '', howto: false, an: null, err: '' },
+    form: {}, kids: 1, kidAges: [2], terms: false, parentErr: '', loginErr: '',
     grid: [0, 1, 2, 3, 4, 5, 6].map(function (i) { return (i >= 5 ? weekend : weekday).slice(); }),
     picked: {
       edu: ['W trakcie studiów pedagogicznych'], exp: ['3–5 lat'], age: ['1–3 lata', '3–6 lat'],
@@ -121,8 +125,29 @@
     { key: 'age', title: 'Wiek dzieci', hint: 'możesz kilka', opts: ['Niemowlęta (0–1)', '1–3 lata', '3–6 lat', '6–10 lat', '10+ lat'] },
     { key: 'act', title: 'Co robię z dziećmi', hint: 'możesz kilka', opts: ['Zabawy plastyczne', 'Czytanie bajek', 'Spacery i plac zabaw', 'Pomoc w lekcjach', 'Gotowanie posiłków', 'Nauka angielskiego', 'Gry planszowe', 'Muzyka i śpiew', 'Sport i ruch', 'Usypianie'] },
     { key: 'hob', title: 'Moje zainteresowania', hint: 'możesz kilka', opts: ['Rysowanie', 'Muzyka', 'Sport', 'Książki', 'Przyroda', 'Taniec', 'Gotowanie', 'Języki obce'] },
-    { key: 'extra', title: 'Dodatkowo', hint: 'możesz kilka', opts: ['Kurs pierwszej pomocy', 'Prawo jazdy', 'Własny samochód', 'Nie palę', 'Lubię zwierzęta', 'Opieka nad chorym dzieckiem'] }
+    { key: 'extra', title: 'Dodatkowo', hint: 'możesz kilka', opts: ['Kurs pierwszej pomocy', 'Prawo jazdy', 'Własny samochód', 'Nie palę', 'Lubię zwierzęta', 'Opieka nad chorym dzieckiem'] },
+    { key: 'where', title: 'Gdzie mogę się opiekować', hint: 'możesz kilka', opts: ['W domu rodziców', 'U siebie w domu', 'Odbiór z przedszkola / szkoły', 'Wyjazdy i wakacje'] }
   ];
+
+  function fld(key, label, type, auto, ph) {
+    return '<div class="field"><label for="f-' + key + '">' + label + '</label><input class="input" id="f-' + key + '" type="' + type + '" autocomplete="' + auto + '" data-field="' + key + '" value="' + esc(S.form[key] || '') + '" placeholder="' + (ph || '') + '"></div>';
+  }
+  function missing(list) {
+    return list.filter(function (f) { return !(S.form[f[0]] || '').trim(); }).map(function (f) { return f[1]; });
+  }
+  function errBox(t) { return t ? '<div role="alert" style="background:#FDE8E8;color:#9B1C1C;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700">' + t + '</div>' : ''; }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function startAnalysis(n) {
+    if (S.reg.an !== null) return;
+    S.reg.an = 0;
+    (function tick() {
+      setTimeout(function () {
+        S.reg.an++;
+        if (current === 'weryfikacja') render(true);
+        if (S.reg.an < n) tick();
+      }, 1100);
+    })();
+  }
 
   function back(to, label) { return '<a class="back" href="#' + to + '" aria-label="' + (label || 'Wróć') + '">' + I.back + '</a>'; }
   function nav(on) {
@@ -147,8 +172,65 @@
           row('#FFEDE5', I.clock, 'Niania na teraz', 'Zobacz, kto jest wolny dziś w Twojej okolicy') +
         '</div>' +
         '<div style="flex:1"></div>' +
-        '<div style="display:flex;flex-direction:column;gap:12px"><a class="btn" href="#szukaj">Szukam niani</a><a class="btn alt" href="#weryfikacja">Jestem nianią</a><p class="muted" style="text-align:center;font-size:15px;margin-top:4px">Masz już konto? <a href="#szukaj" style="font-weight:700">Zaloguj się</a></p></div>' +
+        '<div style="display:flex;flex-direction:column;gap:12px"><a class="btn" href="#rola">Zarejestruj się</a><a class="btn alt" href="#logowanie">Zaloguj się</a></div>' +
         '</div>' + DEMO;
+    },
+
+    rola: function () {
+      function opt(href, act, bg, icon, t, s) {
+        return '<a href="' + href + '"' + (act ? ' data-act="' + act + '"' : '') + ' class="card" style="flex-direction:row;align-items:center;gap:16px;text-decoration:none;color:#24203A;padding:20px;border:2px solid #E9E4FD">' +
+          '<div style="width:56px;height:56px;border-radius:18px;background:' + bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' + icon + '</div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:19px;font-weight:800">' + t + '</span><span class="muted" style="font-size:14px;line-height:1.4">' + s + '</span></div>' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6C4CE0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>';
+      }
+      var parentIcon = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A3A9E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 21v-3a5 5 0 0 1 10 0v3"/><path d="M14 21v-2a3 3 0 0 1 6 0v2"/></svg>';
+      var nannyIcon = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#17704A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
+      return '<div class="content" style="gap:22px">' +
+        '<div class="head">' + back('start') + '<h1>Zarejestruj się</h1></div>' +
+        '<p class="muted" style="font-size:16px;line-height:1.5">Kim jesteś? Dopasujemy formularz do Ciebie.</p>' +
+        opt('#rodzicrej', '', '#E9E4FD', parentIcon, 'Szukam niani', 'Jestem rodzicem albo opiekunem dziecka') +
+        opt('#weryfikacja', 'reg:reset', '#E2F5EC', nannyIcon, 'Jestem nianią', 'Chcę opiekować się dziećmi i dostawać zlecenia') +
+        '<p class="muted" style="text-align:center;font-size:15px">Masz już konto? <a href="#logowanie" style="font-weight:700">Zaloguj się</a></p>' +
+        '</div>';
+    },
+
+    logowanie: function () {
+      return '<div class="content" style="gap:20px">' +
+        '<div class="head">' + back('start') + '<h1>Zaloguj się</h1></div>' +
+        '<p class="muted" style="font-size:16px;line-height:1.5">Miło Cię znowu widzieć!</p>' +
+        '<div class="card" style="gap:14px">' + fld('l_email', 'E-mail', 'email', 'email', 'twoj@email.pl') + fld('l_haslo', 'Hasło', 'password', 'current-password') +
+        '<a href="#logowanie" style="font-size:14px;font-weight:700;align-self:flex-end">Nie pamiętasz hasła?</a></div>' +
+        errBox(S.loginErr) +
+        '<button class="btn" data-act="login">Zaloguj się</button>' +
+        '<p class="muted" style="text-align:center;font-size:15px">Nie masz konta? <a href="#rola" style="font-weight:700">Zarejestruj się</a></p>' +
+        '</div>';
+    },
+
+    rodzicrej: function () {
+      var ages = ['Niemowlę (0–1)', '1–3 lata', '3–6 lat', '6–10 lat', '10+ lat'];
+      return '<div class="content">' +
+        '<div class="head">' + back('rola') + '<div style="display:flex;flex-direction:column"><span class="lbl">Konto rodzica</span><h1 style="font-size:22px">Załóż konto</h1></div></div>' +
+        '<div class="card" style="gap:14px">' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' + fld('p_imie', 'Imię', 'text', 'given-name') + fld('p_nazwisko', 'Nazwisko', 'text', 'family-name') + '</div>' +
+          fld('p_tel', 'Telefon', 'tel', 'tel', '+48 600 000 000') +
+          fld('p_email', 'E-mail', 'email', 'email', 'twoj@email.pl') +
+          fld('p_haslo', 'Hasło (min. 8 znaków)', 'password', 'new-password') +
+        '</div>' +
+        '<h2>Gdzie potrzebujesz opieki?</h2>' +
+        '<div class="card" style="gap:14px">' + fld('p_ulica', 'Ulica i numer', 'text', 'street-address', 'np. Lipowa 5/12') +
+          '<div style="display:grid;grid-template-columns:2fr 3fr;gap:12px">' + fld('p_kod', 'Kod pocztowy', 'text', 'postal-code', '20-000') + fld('p_miasto', 'Miasto', 'text', 'address-level2', 'Lublin') + '</div>' +
+          '<span class="muted small">Nianie zobaczą tylko Twoją dzielnicę. Dokładny adres podasz po potwierdzeniu rezerwacji.</span></div>' +
+        '<h2>Twoje dzieci</h2>' +
+        '<div class="card" style="gap:14px"><div class="stepper"><span style="font-size:16px;font-weight:800">Liczba dzieci</span><div style="display:flex;align-items:center;gap:14px"><button data-act="kids:-1" aria-label="Mniej dzieci">−</button><span style="font-size:20px;font-weight:800;min-width:16px;text-align:center">' + S.kids + '</span><button data-act="kids:1" aria-label="Więcej dzieci">+</button></div></div>' +
+          '<span class="lbl">Wiek dzieci</span><div class="chips">' + ages.map(function (a, i) {
+            var on = S.kidAges.indexOf(i) >= 0;
+            return '<button class="tog ' + (on ? 'on' : '') + '" data-act="age:' + i + '" aria-pressed="' + on + '">' + (on ? I.check('#fff', 14, 3.2) : '') + a + '</button>';
+          }).join('') + '</div></div>' +
+        '<button data-act="terms" style="display:flex;gap:12px;align-items:flex-start;background:none;border:0;padding:0;text-align:left;color:#24203A">' +
+          '<span style="width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;' + (S.terms ? 'background:#6C4CE0' : 'background:#fff;border:2px solid #B9ACF0') + '">' + (S.terms ? I.check('#fff', 16, 3.2) : '') + '</span>' +
+          '<span style="font-size:14px;line-height:1.45">Akceptuję <a href="#rodzicrej" style="font-weight:700">regulamin</a> i <a href="#rodzicrej" style="font-weight:700">politykę prywatności</a></span></button>' +
+        errBox(S.parentErr) +
+        '</div><div class="bar"><button class="btn" data-act="parent:create">Załóż konto</button></div>';
     },
 
     szukaj: function () {
@@ -259,19 +341,88 @@
     },
 
     weryfikacja: function () {
-      function done(t, s) { return '<div class="step"><div class="num" style="background:#E2F5EC">' + I.check('#17704A', 16) + '</div><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800">' + t + '</span><span class="muted small">' + s + '</span></div></div>'; }
-      function todo(n, t, s) { return '<div class="step" style="opacity:.75"><div class="num" style="background:#EEECF4;color:#5E5A72">' + n + '</div><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800">' + t + '</span><span class="muted small">' + s + '</span></div></div>'; }
-      return '<div class="content">' +
-        '<div class="head">' + back('start') + '<div style="display:flex;flex-direction:column"><span class="lbl">Krok 3 z 5</span><h1 style="font-size:22px">Zostań Super Nianią</h1></div></div>' +
-        '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px" aria-hidden="true"><div style="height:6px;border-radius:9px;background:#17704A"></div><div style="height:6px;border-radius:9px;background:#17704A"></div><div style="height:6px;border-radius:9px;background:#6C4CE0"></div><div style="height:6px;border-radius:9px;background:#DCD6F2"></div><div style="height:6px;border-radius:9px;background:#DCD6F2"></div></div>' +
-        '<div style="display:flex;flex-direction:column;gap:10px">' +
-          done('Dane podstawowe', 'Imię, telefon, miasto') + done('Tożsamość potwierdzona', 'Przez logowanie do Twojego banku') +
-          '<div class="card" style="border:2px solid #6C4CE0;padding:16px;border-radius:18px"><div style="display:flex;gap:12px;align-items:center"><div class="num" style="background:#6C4CE0;color:#fff">3</div><span style="font-size:16px;font-weight:800">Zaświadczenie o niekaralności</span></div>' +
-            '<p style="font-size:14px;line-height:1.5;color:#4A4560">Pobierz e-zaświadczenie z Krajowego Rejestru Karnego (zajmuje ok. 15 minut) i dodaj plik PDF. Sprawdzimy jego autentyczność.</p>' +
-            '<button style="height:110px;border-radius:14px;border:2px dashed #B9ACF0;background:#F6F4FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#4A3A9E">' + I.upload + '<span style="font-size:15px;font-weight:800">Dodaj plik PDF</span></button>' +
-            '<a href="#weryfikacja" style="font-size:14px;font-weight:700">Jak pobrać zaświadczenie? Pokażemy krok po kroku</a></div>' +
-          todo(4, 'Rejestr sprawców przestępstw', 'Sprawdzimy to za Ciebie') + todo(5, 'Profil i dostępność', 'Wykształcenie, zajęcia z dziećmi, stawka, kalendarz') +
-        '</div></div><div class="bar"><a class="btn" href="#profilniani">Dalej</a></div>';
+      var R = S.reg, st = R.step, F = S.form;
+      var titles = ['Dane podstawowe', 'Potwierdzenie tożsamości', 'Zaświadczenie o niekaralności', 'Analiza bezpieczeństwa', 'Twój profil'];
+      var bar = '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px" aria-hidden="true">' + [1, 2, 3, 4, 5].map(function (i) {
+        return '<div style="height:6px;border-radius:9px;background:' + (i < st ? '#17704A' : i === st ? '#6C4CE0' : '#DCD6F2') + '"></div>';
+      }).join('') + '</div>';
+      var head = '<div class="head">' + (st > 1 ? '<button class="back" data-act="reg:back" aria-label="Poprzedni krok">' + I.back + '</button>' : back('start')) +
+        '<div style="display:flex;flex-direction:column"><span class="lbl">Krok ' + st + ' z 5</span><h1 style="font-size:22px">' + titles[st - 1] + '</h1></div></div>';
+      var err = R.err ? '<div role="alert" style="background:#FDE8E8;color:#9B1C1C;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700">' + R.err + '</div>' : '';
+      function field(key, label, type, auto, ph) {
+        return '<div class="field"><label for="f-' + key + '">' + label + '</label><input class="input" id="f-' + key + '" type="' + type + '" autocomplete="' + auto + '" data-field="' + key + '" value="' + esc(F[key] || '') + '" placeholder="' + (ph || '') + '"></div>';
+      }
+      var body = '', bottom = '';
+
+      if (st === 1) {
+        body = '<p class="muted" style="font-size:15px;line-height:1.5">Te dane widzi tylko zespół Super Niani. Rodzice zobaczą wyłącznie Twoje imię i dzielnicę.</p>' +
+          '<div class="card" style="gap:14px">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' + field('imie', 'Imię', 'text', 'given-name') + field('nazwisko', 'Nazwisko', 'text', 'family-name') + '</div>' +
+            field('ur', 'Data urodzenia', 'date', 'bday') +
+            field('tel', 'Telefon', 'tel', 'tel', '+48 600 000 000') +
+            field('email', 'E-mail', 'email', 'email', 'twoj@email.pl') +
+            field('haslo', 'Hasło (min. 8 znaków)', 'password', 'new-password') +
+          '</div>' +
+          '<h2>Adres zamieszkania</h2>' +
+          '<div class="card" style="gap:14px">' +
+            field('ulica', 'Ulica i numer domu / mieszkania', 'text', 'street-address', 'np. Lipowa 5/12') +
+            '<div style="display:grid;grid-template-columns:2fr 3fr;gap:12px">' + field('kod', 'Kod pocztowy', 'text', 'postal-code', '20-000') + field('miasto', 'Miasto', 'text', 'address-level2', 'Lublin') + '</div>' +
+          '</div>' + err;
+        bottom = '<button class="btn" data-act="reg:next">Dalej</button>';
+      }
+
+      if (st === 2) {
+        var banks = ['PKO BP', 'Pekao', 'mBank', 'ING', 'Santander', 'Millennium', 'Alior', 'Inny bank'];
+        if (R.id === 'ok') {
+          body = '<div class="card" style="align-items:center;text-align:center;gap:12px;padding:24px"><div style="width:72px;height:72px;border-radius:24px;background:#E2F5EC;display:flex;align-items:center;justify-content:center">' + I.check('#17704A', 36, 2.6) + '</div>' +
+            '<h2 style="font-size:20px">Tożsamość potwierdzona</h2>' +
+            '<p class="muted" style="font-size:15px;line-height:1.5">Bank potwierdził, że jesteś <b style="color:#24203A">' + esc(((F.imie || '') + ' ' + (F.nazwisko || '')).trim() || 'osobą z formularza') + '</b>. Dane zgadzają się z tymi z kroku 1.</p>' +
+            '<span class="badge b-green">' + I.check('#17704A', 12) + 'Potwierdzone przez ' + esc(R.bank) + '</span></div>';
+          bottom = '<button class="btn" data-act="reg:next">Dalej</button>';
+        } else if (R.id === 'loading') {
+          body = '<div class="card" style="align-items:center;text-align:center;gap:14px;padding:32px"><div class="spin" style="width:40px;height:40px;border-width:4px"></div><h2>Łączymy z ' + esc(R.bank) + '…</h2><p class="muted" style="font-size:14px">Zaloguj się w swoim banku i potwierdź udostępnienie danych.</p></div>';
+        } else {
+          body = '<p class="muted" style="font-size:15px;line-height:1.5">Potwierdź, że to naprawdę Ty – logując się do swojego banku, tak jak przy płatności online. Nie widzimy Twojego hasła ani pieniędzy, bank przekazuje nam tylko imię, nazwisko i PESEL.</p>' +
+            '<h2>Wybierz swój bank</h2>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + banks.map(function (b, i) {
+              return '<button data-act="bank:' + i + '" style="height:58px;border-radius:16px;border:1.5px solid #D9D1FA;background:#fff;color:#24203A;font-size:16px;font-weight:800">' + b + '</button>';
+            }).join('') + '</div>' +
+            '<div class="card" style="flex-direction:row;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:#F1EEFC"><span style="flex-shrink:0">' + I.shield('#4A3A9E') + '</span><span style="font-size:14px;line-height:1.45;color:#3D2E8C">Połączenie jest szyfrowane. Nie przechowujemy skanów dowodu osobistego.</span></div>';
+        }
+        S._banks = banks;
+      }
+
+      if (st === 3) {
+        var steps = ['Wejdź na stronę e-KRK Ministerstwa Sprawiedliwości.', 'Zaloguj się profilem zaufanym albo e-dowodem.', 'Wybierz „Wniosek o udzielenie informacji o osobie” i wypełnij swoje dane.', 'Opłać wniosek online.', 'Pobierz gotowe e-zaświadczenie (plik PDF) i dodaj je tutaj.'];
+        body = '<p class="muted" style="font-size:15px;line-height:1.5">Dodaj elektroniczne zaświadczenie z Krajowego Rejestru Karnego (plik PDF). Sprawdzimy jego podpis elektroniczny, więc nie da się go podrobić.</p>' +
+          (R.file
+            ? '<div class="card" style="flex-direction:row;align-items:center;gap:12px;border:2px solid #17704A"><div style="width:44px;height:44px;border-radius:14px;background:#E2F5EC;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + I.check('#17704A', 22) + '</div><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(R.file) + '</span><span class="small" style="color:#17704A;font-weight:700">Plik dodany</span></div><label style="font-size:14px;font-weight:800;color:#5B3FD0;cursor:pointer">Zmień<input type="file" accept="application/pdf,.pdf" data-file style="display:none"></label></div>'
+            : '<label style="height:130px;border-radius:16px;border:2px dashed #B9ACF0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#4A3A9E;cursor:pointer">' + I.upload + '<span style="font-size:16px;font-weight:800">Dodaj plik PDF</span><span class="muted small">z telefonu albo komputera</span><input type="file" accept="application/pdf,.pdf" data-file style="display:none"></label>') +
+          '<button data-act="reg:howto" style="background:none;border:0;padding:0;text-align:left;color:#5B3FD0;font-size:15px;font-weight:800">' + (R.howto ? 'Ukryj instrukcję' : 'Jak pobrać zaświadczenie? Pokażemy krok po kroku') + '</button>' +
+          (R.howto ? '<div class="card" style="gap:12px">' + steps.map(function (s, i) {
+            return '<div style="display:flex;gap:12px;align-items:flex-start"><div class="num" style="width:28px;height:28px;font-size:14px;background:#F1EEFC;color:#4A3A9E">' + (i + 1) + '</div><span style="font-size:14px;line-height:1.45">' + s + '</span></div>';
+          }).join('') + '<span class="muted small">Zajmuje to zwykle ok. 15 minut.</span></div>' : '') + err;
+        bottom = '<button class="btn" data-act="reg:next">Wyślij do analizy</button>';
+      }
+
+      if (st === 4) {
+        var checks = ['Zgodność danych z bankiem', 'Autentyczność zaświadczenia (podpis elektroniczny)', 'Brak wpisów w Krajowym Rejestrze Karnym', 'Brak wpisu w rejestrze sprawców przestępstw na tle seksualnym', 'Ukończone 18 lat'];
+        var doneAll = R.an >= checks.length;
+        body = (doneAll
+            ? '<div class="card" style="align-items:center;text-align:center;gap:12px;padding:24px;background:#17704A;color:#fff"><div style="width:72px;height:72px;border-radius:24px;background:#fff;display:flex;align-items:center;justify-content:center">' + I.shield('#17704A').replace(/width="20" height="20"/, 'width="40" height="40"') + '</div><h2 style="font-size:22px">Wszystko w porządku!</h2><p style="font-size:15px;line-height:1.5">Przeszłaś weryfikację. Na Twoim profilu pojawi się odznaka <b>„Zweryfikowana”</b>.</p></div>'
+            : '<p class="muted" style="font-size:15px;line-height:1.5">Sprawdzamy Twoje dokumenty. To potrwa chwilę – nie zamykaj aplikacji.</p>') +
+          '<div class="card" style="gap:16px">' + checks.map(function (c, i) {
+            var icon = i < R.an ? '<div class="num" style="width:28px;height:28px;background:#E2F5EC">' + I.check('#17704A', 14) + '</div>'
+              : i === R.an ? '<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><div class="spin"></div></div>'
+              : '<div class="num" style="width:28px;height:28px;background:#EEECF4"></div>';
+            var state = i < R.an ? '<span class="small" style="color:#17704A;font-weight:800">OK</span>' : i === R.an ? '<span class="small" style="color:#5B3FD0;font-weight:800">Sprawdzam…</span>' : '';
+            return '<div style="display:flex;gap:12px;align-items:center">' + icon + '<span style="flex:1;font-size:15px;font-weight:700;' + (i > R.an ? 'color:#6B6680' : '') + '">' + c + '</span>' + state + '</div>';
+          }).join('') + '</div>';
+        bottom = doneAll ? '<a class="btn" href="#profilniani">Dalej: uzupełnij profil</a>' : '<button class="btn" style="opacity:.55" disabled>Trwa analiza…</button>';
+        startAnalysis(checks.length);
+      }
+
+      return '<div class="content">' + head + bar + body + '</div>' + (bottom ? '<div class="bar">' + bottom + '</div>' : '');
     },
 
     profilniani: function () {
@@ -336,12 +487,53 @@
     else if (a === 'day') S.day = +v;
     else if (a === 'slot') S.grid[S.day][+v] = !S.grid[S.day][+v];
     else if (a === 'all') S.grid[S.day] = S.grid[S.day].map(function () { return v === '1'; });
+    else if (a === 'kids') S.kids = Math.min(8, Math.max(1, S.kids + (+v)));
+    else if (a === 'age') { var ai = +v; S.kidAges = S.kidAges.indexOf(ai) >= 0 ? S.kidAges.filter(function (x) { return x !== ai; }) : S.kidAges.concat([ai]); }
+    else if (a === 'terms') { if (e.target.closest('a')) return; S.terms = !S.terms; }
+    else if (a === 'parent') {
+      var pb = missing([['p_imie', 'imię'], ['p_nazwisko', 'nazwisko'], ['p_tel', 'telefon'], ['p_email', 'e-mail'], ['p_haslo', 'hasło'], ['p_miasto', 'miasto']]);
+      if (pb.length) S.parentErr = 'Uzupełnij: ' + pb.join(', ') + '.';
+      else if (!S.terms) S.parentErr = 'Zaakceptuj regulamin, żeby założyć konto.';
+      else { S.parentErr = ''; location.hash = '#abonament'; return; }
+    }
+    else if (a === 'login') {
+      if (missing([['l_email', 'e-mail'], ['l_haslo', 'hasło']]).length) S.loginErr = 'Wpisz e-mail i hasło.';
+      else { S.loginErr = ''; location.hash = '#szukaj'; return; }
+    }
+    else if (a === 'reg') {
+      var R = S.reg, F = S.form;
+      R.err = '';
+      if (v === 'reset') { if (R.an === null || R.an >= 5) { S.reg = { step: 1, id: null, bank: '', file: '', howto: false, an: null, err: '' }; } return; }
+      if (v === 'back') R.step = Math.max(1, R.step - 1);
+      else if (v === 'howto') R.howto = !R.howto;
+      else if (v === 'next') {
+        if (R.step === 1) {
+          var brak = missing([['imie', 'imię'], ['nazwisko', 'nazwisko'], ['tel', 'telefon'], ['email', 'e-mail'], ['haslo', 'hasło'], ['ulica', 'adres'], ['miasto', 'miasto']]);
+          if (brak.length) R.err = 'Uzupełnij: ' + brak.join(', ') + '.'; else R.step = 2;
+        } else if (R.step === 2) { if (R.id === 'ok') R.step = 3; }
+        else if (R.step === 3) { if (!R.file) R.err = 'Dodaj plik PDF z zaświadczeniem, żeby przejść dalej.'; else R.step = 4; }
+      }
+    }
+    else if (a === 'bank') {
+      S.reg.bank = S._banks[+v]; S.reg.id = 'loading';
+      setTimeout(function () { S.reg.id = 'ok'; if (current === 'weryfikacja') render(true); }, 1800);
+    }
     else if (a === 'pick') {
       var g = GROUPS[+v], o = g.opts[+p[2]], cur = S.picked[g.key] || [];
       if (g.single) S.picked[g.key] = [o];
       else S.picked[g.key] = cur.indexOf(o) >= 0 ? cur.filter(function (x) { return x !== o; }) : cur.concat([o]);
     }
     render(true);
+  });
+  app.addEventListener('input', function (e) {
+    var f = e.target.getAttribute && e.target.getAttribute('data-field');
+    if (f) S.form[f] = e.target.value;
+  });
+  app.addEventListener('change', function (e) {
+    if (e.target.hasAttribute && e.target.hasAttribute('data-file') && e.target.files && e.target.files[0]) {
+      S.reg.file = e.target.files[0].name; S.reg.err = '';
+      render(true);
+    }
   });
   window.addEventListener('hashchange', function () { render(false); });
   render(false);
