@@ -113,6 +113,35 @@
   var S = {
     mode: 'teraz', sel: 0, hours: 4, sent: false, now: true, day: 2, rate: 35,
     reg: { step: 1, id: null, bank: '', file: '', howto: false, an: null, err: '' },
+    chats: [
+      { ini: 'MK', name: 'Magda', bg: '#E9E4FD', fg: '#4A3A9E', unread: 1, msgs: [
+        { me: true, t: 'Dzień dobry! Czy da Pani radę dziś od 18:00 do 22:00?', time: '15:02' },
+        { me: false, t: 'Dzień dobry! Tak, oczywiście. Ile lat ma dziecko?', time: '15:05' },
+        { me: true, t: 'Zosia ma 4 lata. Ma alergię na orzechy – kolacja będzie w lodówce.', time: '15:06' },
+        { me: false, t: 'Rozumiem, będę uważać. Do zobaczenia o 18:00!', time: '15:09' }
+      ] },
+      { ini: 'KW', name: 'Kasia', bg: '#FFEDE5', fg: '#9A3A15', unread: 0, msgs: [
+        { me: false, t: 'Dziękuję za ocenę! Chętnie przyjdę znowu.', time: 'wt.' }
+      ] },
+      { ini: 'TN', name: 'Pani Teresa', bg: '#E2F5EC', fg: '#17704A', unread: 0, msgs: [
+        { me: true, t: 'Czy w przyszłym tygodniu ma Pani wolne poranki?', time: '12 lis' },
+        { me: false, t: 'Tak, poniedziałek i środa od 8:00.', time: '12 lis' }
+      ] }
+    ],
+    chat: 0,
+    notifs: [
+      { icon: 'check', t: 'Magda potwierdziła rezerwację', s: 'Dziś, 18:00–22:00', time: '15:10', read: false, go: 'historia' },
+      { icon: 'msg', t: 'Nowa wiadomość od Magdy', s: '„Do zobaczenia o 18:00!”', time: '15:09', read: false, go: 'czat' },
+      { icon: 'star', t: 'Oceń wizytę Kasi', s: 'Wtorek, 17:00–21:00 · Twoja opinia pomaga innym rodzicom', time: 'wt.', read: false, go: 'historia' },
+      { icon: 'pin', t: 'Nowa zweryfikowana niania w okolicy', s: 'Ola, 22 l. · 3,1 km od Ciebie', time: 'pon.', read: true, go: 'profil' },
+      { icon: 'card', t: 'Abonament odnowiony', s: '19,99 zł · następna płatność 25 grudnia', time: '25 lis', read: true, go: 'abonament' }
+    ],
+    visits: [
+      { id: 'v1', ini: 'MK', name: 'Magda', bg: '#E9E4FD', fg: '#4A3A9E', date: 'Dziś, 25 listopada', hours: '18:00–22:00', h: 4, rate: 35, status: 'upcoming' },
+      { id: 'v2', ini: 'KW', name: 'Kasia', bg: '#FFEDE5', fg: '#9A3A15', date: 'Wtorek, 24 listopada', hours: '17:00–21:00', h: 4, rate: 40, status: 'done', inOut: 'Przyszła 16:56 · wyszła 21:04', stars: 0 },
+      { id: 'v3', ini: 'TN', name: 'Pani Teresa', bg: '#E2F5EC', fg: '#17704A', date: 'Pon., 17 listopada', hours: '8:00–13:00', h: 5, rate: 38, status: 'done', inOut: 'Przyszła 7:55 · wyszła 13:02', stars: 5 },
+      { id: 'v4', ini: 'MK', name: 'Magda', bg: '#E9E4FD', fg: '#4A3A9E', date: 'Sob., 8 listopada', hours: '19:00–23:00', h: 4, rate: 35, status: 'done', inOut: 'Przyszła 18:58 · wyszła 23:01', stars: 5 }
+    ],
     form: {}, fe: {}, kids: 1, kidAges: [2], terms: false, parentErr: '', loginErr: '',
     grid: [0, 1, 2, 3, 4, 5, 6].map(function (i) { return (i >= 5 ? weekend : weekday).slice(); }),
     picked: {
@@ -180,10 +209,18 @@
 
   function back(to, label) { return '<a class="back" href="#' + to + '" aria-label="' + (label || 'Wróć') + '">' + I.back + '</a>'; }
   function nav(on) {
-    var items = [['szukaj', 'Szukaj', I.search], ['rezerwacja', 'Rezerwacje', I.cal], ['profil', 'Wiadomości', I.msg], ['abonament', 'Konto', I.user]];
+    var unread = S.chats.reduce(function (a, c) { return a + c.unread; }, 0);
+    var items = [['szukaj', 'Szukaj', I.search, 0], ['historia', 'Historia', I.cal, 0], ['wiadomosci', 'Wiadomości', I.msg, unread], ['abonament', 'Konto', I.user, 0]];
     return '<nav class="nav" aria-label="Menu główne">' + items.map(function (it) {
-      return '<a href="#' + it[0] + '" class="' + (it[0] === on ? 'on' : '') + '">' + it[2] + it[1] + '</a>';
+      return '<a href="#' + it[0] + '" class="' + (it[0] === on ? 'on' : '') + '" style="position:relative">' + it[2] + it[1] +
+        (it[3] ? '<span style="position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#C81E1E;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">' + it[3] + '</span>' : '') + '</a>';
     }).join('') + '</nav>';
+  }
+  function bell() {
+    var n = S.notifs.filter(function (x) { return !x.read; }).length;
+    return '<a href="#powiadomienia" aria-label="Powiadomienia' + (n ? ', nowe: ' + n : '') + '" style="position:relative;width:44px;height:44px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#24203A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>' +
+      (n ? '<span style="position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#C81E1E;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #F6F4FF">' + n + '</span>' : '') + '</a>';
   }
   var DEMO = '<div class="demo">Projekt poglądowy – dane są przykładowe</div>';
 
@@ -262,12 +299,105 @@
         '</div><div class="bar"><button class="btn" data-act="parent:create">Załóż konto</button></div>';
     },
 
+    wiadomosci: function () {
+      return '<div class="content" style="gap:14px">' +
+        '<div class="head" style="justify-content:space-between"><h1>Wiadomości</h1>' + bell() + '</div>' +
+        S.chats.map(function (c, i) {
+          var last = c.msgs[c.msgs.length - 1];
+          return '<a href="#czat" data-act="chat:' + i + '" class="nanny" style="align-items:center">' +
+            '<div class="avatar" style="width:52px;height:52px;background:' + c.bg + ';color:' + c.fg + ';font-size:18px">' + c.ini + '</div>' +
+            '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><div style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:16px;font-weight:800">' + c.name + '</span><span class="muted small">' + last.time + '</span></div>' +
+            '<span style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' + (c.unread ? 'font-weight:800;color:#24203A' : 'color:#5E5A72') + '">' + (last.me ? 'Ty: ' : '') + esc(last.t) + '</span></div>' +
+            (c.unread ? '<span style="min-width:22px;height:22px;border-radius:999px;background:#6C4CE0;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">' + c.unread + '</span>' : '') +
+            '</a>';
+        }).join('') +
+        '<p class="muted small" style="text-align:center;line-height:1.5">Ze względów bezpieczeństwa numer telefonu wymieniasz dopiero po potwierdzeniu rezerwacji.</p>' +
+        '</div>' + nav('wiadomosci');
+    },
+
+    czat: function () {
+      var c = S.chats[S.chat];
+      return '<div style="position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #ECE8FA;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:12px">' +
+          back('wiadomosci', 'Wróć do wiadomości') +
+          '<div class="avatar" style="width:44px;height:44px;border-radius:14px;background:' + c.bg + ';color:' + c.fg + ';font-size:16px">' + c.ini + '</div>' +
+          '<div style="flex:1;display:flex;flex-direction:column"><span style="font-size:17px;font-weight:800">' + c.name + '</span><span style="font-size:13px;font-weight:700;color:#17704A">Zweryfikowana · zwykle odpowiada w 10 min</span></div>' +
+          '<a href="#profil" style="font-size:14px;font-weight:800">Profil</a></div>' +
+        '<div class="content" style="gap:10px;padding-top:16px">' +
+          '<span class="muted small" style="text-align:center">Dziś</span>' +
+          c.msgs.map(function (m) {
+            return '<div style="display:flex;justify-content:' + (m.me ? 'flex-end' : 'flex-start') + '"><div style="max-width:78%;padding:10px 14px;border-radius:' + (m.me ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';background:' + (m.me ? '#6C4CE0' : '#fff') + ';color:' + (m.me ? '#fff' : '#24203A') + ';font-size:15px;line-height:1.45">' + esc(m.t) +
+              '<div style="font-size:11px;margin-top:4px;text-align:right;' + (m.me ? 'color:#E3DCFF' : 'color:#6B6680') + '">' + m.time + '</div></div></div>';
+          }).join('') +
+          (S.typing ? '<div style="display:flex"><div style="padding:10px 14px;border-radius:18px;background:#fff;color:#5E5A72;font-size:14px;font-weight:700">' + c.name + ' pisze…</div></div>' : '') +
+        '</div>' +
+        '<div class="bar" style="flex-direction:column;align-items:stretch;gap:10px">' +
+          '<div class="chips" style="flex-wrap:nowrap;overflow-x:auto">' + ['Dziękuję!', 'Spóźnię się 10 min', 'Gdzie jesteś?'].map(function (q, i) {
+            return '<button class="tog" data-act="quick:' + i + '" style="flex-shrink:0;height:34px;font-size:13px">' + q + '</button>';
+          }).join('') + '</div>' +
+          '<div style="display:flex;gap:10px"><label for="f-msg" style="position:absolute;left:-9999px">Wiadomość</label><input class="input" id="f-msg" data-field="msg" placeholder="Napisz wiadomość…" value="' + esc(S.form.msg || '') + '" style="flex:1;border-radius:999px;font-weight:600">' +
+          '<button data-act="chatsend" aria-label="Wyślij" style="width:48px;height:48px;border:0;border-radius:999px;background:#6C4CE0;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2-7-8-1z"/></svg></button></div>' +
+        '</div>';
+    },
+
+    powiadomienia: function () {
+      var ic = {
+        check: ['#E2F5EC', I.check('#17704A', 18)],
+        msg: ['#E9E4FD', I.msg.replace('stroke="currentColor"', 'stroke="#4A3A9E"').replace('width="24" height="24"', 'width="20" height="20"')],
+        star: ['#FFF4D6', I.star.replace(/width="14" height="14"/, 'width="20" height="20"')],
+        pin: ['#E9E4FD', I.pinI('#4A3A9E')],
+        card: ['#FFEDE5', '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A3A15" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>']
+      };
+      var any = S.notifs.some(function (n) { return !n.read; });
+      return '<div class="content" style="gap:12px">' +
+        '<div class="head" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:12px">' + back('szukaj') + '<h1>Powiadomienia</h1></div></div>' +
+        (any ? '<button data-act="readall" style="align-self:flex-end;background:none;border:0;color:#5B3FD0;font-size:14px;font-weight:800;padding:0">Oznacz wszystkie jako przeczytane</button>' : '') +
+        S.notifs.map(function (n, i) {
+          return '<a href="#' + n.go + '" data-act="notif:' + i + '" style="display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;text-decoration:none;color:#24203A;background:' + (n.read ? '#fff' : '#EFEAFE') + ';' + (n.read ? '' : 'border:1.5px solid #D9D1FA') + '">' +
+            '<div style="width:40px;height:40px;border-radius:12px;background:' + ic[n.icon][0] + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' + ic[n.icon][1] + '</div>' +
+            '<div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:' + (n.read ? '700' : '800') + '">' + n.t + '</span><span class="muted" style="font-size:13px;line-height:1.4">' + n.s + '</span></div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="muted small">' + n.time + '</span>' + (n.read ? '' : '<span style="width:9px;height:9px;border-radius:999px;background:#6C4CE0"></span>') + '</div></a>';
+        }).join('') +
+        '<div class="card" style="gap:10px;margin-top:6px"><h2 style="font-size:15px">Dostajesz powiadomienia o:</h2><span class="muted" style="font-size:14px;line-height:1.5">potwierdzeniu rezerwacji · przyjściu i wyjściu niani · nowych wiadomościach · nowych nianiach w okolicy · płatnościach</span></div>' +
+        '</div>';
+    },
+
+    historia: function () {
+      var up = S.visits.filter(function (v) { return v.status === 'upcoming'; });
+      var done = S.visits.filter(function (v) { return v.status === 'done'; });
+      var hrs = done.reduce(function (a, v) { return a + v.h; }, 0), cost = done.reduce(function (a, v) { return a + v.h * v.rate; }, 0);
+      function stars(v) {
+        if (v.stars) return '<span style="display:flex;gap:2px" aria-label="Ocena ' + v.stars + ' na 5">' + [1, 2, 3, 4, 5].map(function (k) { return k <= v.stars ? I.star : I.star.replace(/#F5A524/g, '#DCD6F2'); }).join('') + '</span>';
+        return '<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:800;color:#9A3A15">Oceń wizytę:</span><div style="display:flex;gap:4px">' + [1, 2, 3, 4, 5].map(function (k) {
+          return '<button data-act="rate-v:' + v.id + ':' + k + '" aria-label="' + k + ' na 5" style="width:38px;height:38px;border:1.5px solid #F2D9A6;border-radius:10px;background:#FFFBEF;display:flex;align-items:center;justify-content:center">' + I.star.replace(/#F5A524/g, '#E8C77A') + '</button>';
+        }).join('') + '</div></div>';
+      }
+      function card(v) {
+        var upc = v.status === 'upcoming';
+        return '<div class="card" style="gap:12px;' + (upc ? 'border:2px solid #6C4CE0' : '') + '">' +
+          '<div style="display:flex;gap:12px;align-items:center"><div class="avatar" style="width:48px;height:48px;border-radius:16px;background:' + v.bg + ';color:' + v.fg + ';font-size:17px">' + v.ini + '</div>' +
+          '<div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:800">' + v.name + '</span><span class="muted" style="font-size:14px">' + v.date + ' · ' + v.hours + '</span></div>' +
+          '<span style="font-size:16px;font-weight:800">' + (v.h * v.rate) + ' zł</span></div>' +
+          (upc ? '<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="badge b-green">' + I.check('#17704A', 12) + 'Potwierdzona</span><span class="badge b-lilac">' + v.h + ' h × ' + v.rate + ' zł</span></div>' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><a class="btn soft" href="#czat" data-act="chat:0">Napisz</a><a class="btn alt" style="height:48px;font-size:16px" href="#rezerwacja">Szczegóły</a></div>'
+            : '<span class="muted small">' + v.inOut + ' · ' + v.h + ' h</span>' + stars(v)) +
+          '</div>';
+      }
+      return '<div class="content" style="gap:14px">' +
+        '<div class="head" style="justify-content:space-between"><h1>Historia opieki</h1>' + bell() + '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
+          [[done.length, 'wizyty'], [hrs + ' h', 'opieki'], [cost + ' zł', 'dla niań']].map(function (s) { return '<div class="card" style="padding:12px;gap:2px;align-items:center;border-radius:16px"><span style="font-size:20px;font-weight:800">' + s[0] + '</span><span class="muted small">' + s[1] + '</span></div>'; }).join('') +
+        '</div><span class="muted small" style="text-align:center">Listopad 2026</span>' +
+        '<h2>Nadchodzące</h2>' + up.map(card).join('') +
+        '<h2>Zakończone</h2>' + done.map(card).join('') +
+        '</div>' + nav('historia');
+    },
+
     szukaj: function () {
       var t = S.mode === 'teraz';
       var chips = t ? ['Dziś', 'Od 18:00', '1 dziecko, 3 lata'] : ['Od grudnia', 'Pn–Pt', '1 dziecko, 3 lata'];
       return '<div class="content" style="gap:14px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;flex-direction:column;gap:2px"><span class="muted" style="font-size:14px">Twoja okolica</span><span style="font-size:18px;font-weight:800;display:flex;align-items:center;gap:6px">' + I.pinI() + 'Lublin, do 5 km</span></div>' +
-        '<a href="#abonament" style="padding:8px 12px;border-radius:999px;background:#FFEDE5;color:#9A3A15;font-size:13px;font-weight:800;text-decoration:none">Abonament aktywny</a></div>' +
+        bell() + '</div>' +
         '<div class="seg"><button data-act="mode:teraz" class="' + (t ? 'on' : '') + '">Na teraz</button><button data-act="mode:dluzej" class="' + (t ? '' : 'on') + '">Na dłużej</button></div>' +
         '<div class="chips">' + chips.map(function (c) { return '<span class="chip">' + c + '</span>'; }).join('') + '</div>' +
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:15px;font-weight:700">' + (t ? '4 nianie wolne dziś wieczorem' : '4 nianie szukają stałej opieki') + '</span>' +
@@ -337,7 +467,7 @@
           '<div style="width:96px;height:96px;border-radius:32px;background:#E2F5EC;display:flex;align-items:center;justify-content:center">' + I.check('#17704A', 48, 2.4) + '</div>' +
           '<h1 style="font-size:28px">Prośba wysłana!</h1><p class="muted" style="font-size:16px;line-height:1.5">Magda zwykle odpowiada w ciągu 10 minut. Dostaniesz powiadomienie, gdy potwierdzi wizytę.</p>' +
           '<div class="card" style="width:100%;gap:6px;text-align:left"><span class="lbl">Twoja rezerwacja</span><span style="font-size:16px;font-weight:800">Dziś, 18:00 · ' + S.hours + ' h · ' + total + ' zł</span><span class="muted" style="font-size:14px">Gdy niania przyjdzie i wyjdzie, dostaniesz powiadomienie.</span></div>' +
-          '<div style="flex:1"></div><button class="btn alt" data-act="unsend">Zmień rezerwację</button><a href="#szukaj" style="font-size:15px;font-weight:700">Wróć do wyszukiwania</a></div>';
+          '<div style="flex:1"></div><a class="btn" href="#historia">Zobacz w historii</a><button class="btn alt" data-act="unsend">Zmień rezerwację</button><a href="#szukaj" style="font-size:15px;font-weight:700">Wróć do wyszukiwania</a></div>';
       }
       return '<div class="content">' +
         '<div class="head">' + back('profil', 'Wróć do profilu') + '<h1>Rezerwacja</h1></div>' +
@@ -518,7 +648,8 @@
     if (!screens[name]) name = 'start';
     var y = window.scrollY;
     app.innerHTML = '<div class="wrap">' + screens[name]() + '</div>';
-    if (keepScroll && name === current) window.scrollTo(0, y); else window.scrollTo(0, 0);
+    if (name === 'czat') window.scrollTo(0, document.body.scrollHeight);
+    else if (keepScroll && name === current) window.scrollTo(0, y); else window.scrollTo(0, 0);
     current = name;
   }
 
@@ -537,7 +668,28 @@
     else if (a === 'day') S.day = +v;
     else if (a === 'slot') S.grid[S.day][+v] = !S.grid[S.day][+v];
     else if (a === 'all') S.grid[S.day] = S.grid[S.day].map(function () { return v === '1'; });
-    else if (a === 'kids') S.kids = Math.min(8, Math.max(1, S.kids + (+v)));
+    else if (a === 'chat') { S.chat = +v; S.chats[+v].unread = 0; return; }
+    else if (a === 'notif') {
+      var nn = S.notifs[+v]; nn.read = true;
+      if (nn.go === 'czat') { S.chat = 0; S.chats[0].unread = 0; }
+      return;
+    }
+    else if (a === 'readall') S.notifs.forEach(function (n) { n.read = true; });
+    else if (a === 'rate-v') { S.visits.forEach(function (x) { if (x.id === v) x.stars = +p[2]; }); }
+    else if (a === 'chatsend' || a === 'quick') {
+      var text = a === 'quick' ? ['Dziękuję!', 'Spóźnię się 10 min', 'Gdzie jesteś?'][+v] : (S.form.msg || '').trim();
+      if (!text) return;
+      var ch = S.chats[S.chat], d = new Date(), tm = d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+      ch.msgs.push({ me: true, t: text, time: tm });
+      S.form.msg = ''; S.typing = true;
+      var who = S.chat;
+      setTimeout(function () {
+        S.typing = false;
+        S.chats[who].msgs.push({ me: false, t: 'Jasne, dziękuję za wiadomość! Odezwę się za chwilę.', time: tm });
+        if (current === 'czat') render(true); else S.chats[who].unread++;
+      }, 1800);
+    }
+    else if (a === 'kids')S.kids = Math.min(8, Math.max(1, S.kids + (+v)));
     else if (a === 'age') { var ai = +v; S.kidAges = S.kidAges.indexOf(ai) >= 0 ? S.kidAges.filter(function (x) { return x !== ai; }) : S.kidAges.concat([ai]); }
     else if (a === 'terms') { if (e.target.closest('a')) return; S.terms = !S.terms; }
     else if (a === 'parent') {
@@ -597,6 +749,12 @@
     if (e.target.hasAttribute && e.target.hasAttribute('data-file') && e.target.files && e.target.files[0]) {
       S.reg.file = e.target.files[0].name; S.reg.err = '';
       render(true);
+    }
+  });
+  app.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.getAttribute && e.target.getAttribute('data-field') === 'msg') {
+      e.preventDefault();
+      var b = document.querySelector('[data-act="chatsend"]'); if (b) b.click();
     }
   });
   window.addEventListener('hashchange', function () { render(false); });
