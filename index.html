@@ -72,6 +72,8 @@
   .pin .av { width: 32px; height: 32px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
   .pin.on { background: var(--violet); color: #fff; box-shadow: 0 6px 16px rgba(60,40,140,.35); z-index: 2; }
   .pin.on .av { background: #fff !important; color: var(--violet-ink) !important; }
+  .input.bad { border-color: #C81E1E; background: #FFF7F7; }
+  .ferr { font-size: 13px; font-weight: 700; color: #B42318; }
   .spin { width: 18px; height: 18px; border: 3px solid #D9D1FA; border-top-color: #6C4CE0; border-radius: 50%; animation: sp .8s linear infinite; }
   @keyframes sp { to { transform: rotate(360deg); } }
   .demo { text-align: center; font-size: 12px; color: var(--muted); padding: 10px 20px 4px; }
@@ -111,7 +113,7 @@
   var S = {
     mode: 'teraz', sel: 0, hours: 4, sent: false, now: true, day: 2, rate: 35,
     reg: { step: 1, id: null, bank: '', file: '', howto: false, an: null, err: '' },
-    form: {}, kids: 1, kidAges: [2], terms: false, parentErr: '', loginErr: '',
+    form: {}, fe: {}, kids: 1, kidAges: [2], terms: false, parentErr: '', loginErr: '',
     grid: [0, 1, 2, 3, 4, 5, 6].map(function (i) { return (i >= 5 ? weekend : weekday).slice(); }),
     picked: {
       edu: ['W trakcie studiów pedagogicznych'], exp: ['3–5 lat'], age: ['1–3 lata', '3–6 lat'],
@@ -130,7 +132,34 @@
   ];
 
   function fld(key, label, type, auto, ph) {
-    return '<div class="field"><label for="f-' + key + '">' + label + '</label><input class="input" id="f-' + key + '" type="' + type + '" autocomplete="' + auto + '" data-field="' + key + '" value="' + esc(S.form[key] || '') + '" placeholder="' + (ph || '') + '"></div>';
+    var e = S.fe[key];
+    return '<div class="field"><label for="f-' + key + '">' + label + '</label><input class="input' + (e ? ' bad' : '') + '" id="f-' + key + '" type="' + type + '" autocomplete="' + auto + '" data-field="' + key + '" value="' + esc(S.form[key] || '') + '" placeholder="' + (ph || '') + '"' + (e ? ' aria-invalid="true" aria-describedby="fe-' + key + '"' : '') + '>' +
+      (e ? '<span class="ferr" id="fe-' + key + '">' + e + '</span>' : '') + '</div>';
+  }
+  var LET = 'a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻäöüÄÖÜéÉ';
+  var V = {
+    name: function (s) { return new RegExp('^[' + LET + '][' + LET + "' -]{1,39}$").test(s.trim()) ? '' : 'Wpisz poprawnie – same litery, min. 2.'; },
+    email: function (s) { return /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[a-zA-Z]{2,}$/.test(s.trim()) ? '' : 'Wpisz poprawny e-mail, np. anna@gmail.com'; },
+    tel: function (s) { return /^(\+?48)?\d{9}$/.test(s.replace(/[\s-]/g, '')) ? '' : 'Numer telefonu musi mieć 9 cyfr.'; },
+    pass: function (s) { return s.length >= 8 && /\d/.test(s) ? '' : 'Min. 8 znaków, w tym co najmniej 1 cyfra.'; },
+    street: function (s) { return s.trim().length >= 3 && /\d/.test(s) ? '' : 'Podaj ulicę z numerem, np. Lipowa 5/12.'; },
+    zip: function (s) { return /^\d{2}-\d{3}$/.test(s.trim()) ? '' : 'Kod w formacie 00-000.'; },
+    adult: function (s) {
+      if (!s) return 'Podaj datę urodzenia.';
+      var d = new Date(s), now = new Date(), age = now.getFullYear() - d.getFullYear() - ((now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) ? 1 : 0);
+      if (isNaN(age) || age > 100) return 'Podaj poprawną datę urodzenia.';
+      return age >= 18 ? '' : 'Nianią może zostać osoba, która ma ukończone 18 lat.';
+    },
+    req: function (s) { return s.trim() ? '' : 'To pole jest wymagane.'; }
+  };
+  function validate(rules) {
+    var bad = 0;
+    rules.forEach(function (r) {
+      var val = S.form[r[0]] || '';
+      var msg = val.trim() || r[1] === 'adult' ? V[r[1]](val) : 'To pole jest wymagane.';
+      if (msg) { S.fe[r[0]] = msg; bad++; } else delete S.fe[r[0]];
+    });
+    return bad;
   }
   function missing(list) {
     return list.filter(function (f) { return !(S.form[f[0]] || '').trim(); }).map(function (f) { return f[1]; });
@@ -211,7 +240,7 @@
       return '<div class="content">' +
         '<div class="head">' + back('rola') + '<div style="display:flex;flex-direction:column"><span class="lbl">Konto rodzica</span><h1 style="font-size:22px">Załóż konto</h1></div></div>' +
         '<div class="card" style="gap:14px">' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' + fld('p_imie', 'Imię', 'text', 'given-name') + fld('p_nazwisko', 'Nazwisko', 'text', 'family-name') + '</div>' +
+          fld('p_imie', 'Imię', 'text', 'given-name') + fld('p_nazwisko', 'Nazwisko', 'text', 'family-name') +
           fld('p_tel', 'Telefon', 'tel', 'tel', '+48 600 000 000') +
           fld('p_email', 'E-mail', 'email', 'email', 'twoj@email.pl') +
           fld('p_haslo', 'Hasło (min. 8 znaków)', 'password', 'new-password') +
@@ -349,15 +378,36 @@
       var head = '<div class="head">' + (st > 1 ? '<button class="back" data-act="reg:back" aria-label="Poprzedni krok">' + I.back + '</button>' : back('start')) +
         '<div style="display:flex;flex-direction:column"><span class="lbl">Krok ' + st + ' z 5</span><h1 style="font-size:22px">' + titles[st - 1] + '</h1></div></div>';
       var err = R.err ? '<div role="alert" style="background:#FDE8E8;color:#9B1C1C;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:700">' + R.err + '</div>' : '';
-      function field(key, label, type, auto, ph) {
-        return '<div class="field"><label for="f-' + key + '">' + label + '</label><input class="input" id="f-' + key + '" type="' + type + '" autocomplete="' + auto + '" data-field="' + key + '" value="' + esc(F[key] || '') + '" placeholder="' + (ph || '') + '"></div>';
-      }
+      var field = fld;
       var body = '', bottom = '';
+
+      if (st === 2 && (R.id === 'redirect' || R.id === 'consent' || R.id === 'returning')) {
+        if (R.id !== 'consent') {
+          return '<div class="content" style="align-items:center;justify-content:center;text-align:center;gap:16px;background:#fff"><div class="spin" style="width:44px;height:44px;border-width:4px"></div>' +
+            '<h2 style="font-size:20px">' + (R.id === 'redirect' ? 'Przekierowujemy Cię do ' + esc(R.bank) + '…' : 'Wracasz do Super Niani…') + '</h2>' +
+            '<p class="muted" style="font-size:14px;max-width:300px">' + (R.id === 'redirect' ? 'Za chwilę zobaczysz stronę logowania swojego banku.' : 'Bank przekazuje potwierdzenie Twojej tożsamości.') + '</p></div>';
+        }
+        var who = esc(((F.imie || '') + ' ' + (F.nazwisko || '')).trim());
+        return '<div style="background:#F3F4F6;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column">' +
+          '<div style="background:#FFF4D6;color:#7A5600;font-size:12px;font-weight:800;text-align:center;padding:calc(8px + env(safe-area-inset-top)) 12px 8px">PODGLĄD – w prawdziwej aplikacji tu otworzy się strona Twojego banku</div>' +
+          '<div style="background:#1F2937;color:#fff;padding:18px 20px;display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/></svg><span style="font-size:18px;font-weight:800">Bankowość internetowa · ' + esc(R.bank) + '</span></div>' +
+          '<div style="padding:20px;display:flex;flex-direction:column;gap:16px;flex:1">' +
+            '<div style="background:#fff;border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;border:1px solid #E5E7EB">' +
+              '<h2 style="font-size:18px">Potwierdzenie tożsamości</h2>' +
+              '<p style="font-size:14px;line-height:1.5;color:#374151">Serwis <b>Super Niania</b> prosi o potwierdzenie Twojej tożsamości. Po zalogowaniu bank przekaże mu tylko te dane:</p>' +
+              ['Imię i nazwisko' + (who ? ': ' + who : ''), 'Numer PESEL', 'Data urodzenia'].map(function (d) { return '<div style="display:flex;gap:10px;align-items:center;font-size:15px;font-weight:700;color:#111827">' + I.check('#1F2937', 16) + d + '</div>'; }).join('') +
+              '<p style="font-size:13px;color:#6B7280;line-height:1.45">Bank nie przekaże salda, historii konta ani hasła.</p>' +
+            '</div>' +
+            '<div style="flex:1"></div>' +
+            '<button data-act="bankok" style="height:54px;border:0;border-radius:10px;background:#1F2937;color:#fff;font-size:17px;font-weight:800">Potwierdzam i wracam</button>' +
+            '<button data-act="bankcancel" style="height:50px;border:1.5px solid #D1D5DB;border-radius:10px;background:#fff;color:#374151;font-size:16px;font-weight:700">Anuluj</button>' +
+          '</div></div>';
+      }
 
       if (st === 1) {
         body = '<p class="muted" style="font-size:15px;line-height:1.5">Te dane widzi tylko zespół Super Niani. Rodzice zobaczą wyłącznie Twoje imię i dzielnicę.</p>' +
           '<div class="card" style="gap:14px">' +
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' + field('imie', 'Imię', 'text', 'given-name') + field('nazwisko', 'Nazwisko', 'text', 'family-name') + '</div>' +
+            field('imie', 'Imię', 'text', 'given-name') + field('nazwisko', 'Nazwisko', 'text', 'family-name') +
             field('ur', 'Data urodzenia', 'date', 'bday') +
             field('tel', 'Telefon', 'tel', 'tel', '+48 600 000 000') +
             field('email', 'E-mail', 'email', 'email', 'twoj@email.pl') +
@@ -387,7 +437,7 @@
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' + banks.map(function (b, i) {
               return '<button data-act="bank:' + i + '" style="height:58px;border-radius:16px;border:1.5px solid #D9D1FA;background:#fff;color:#24203A;font-size:16px;font-weight:800">' + b + '</button>';
             }).join('') + '</div>' +
-            '<div class="card" style="flex-direction:row;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:#F1EEFC"><span style="flex-shrink:0">' + I.shield('#4A3A9E') + '</span><span style="font-size:14px;line-height:1.45;color:#3D2E8C">Połączenie jest szyfrowane. Nie przechowujemy skanów dowodu osobistego.</span></div>';
+            '<div class="card" style="flex-direction:row;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:#F1EEFC"><span style="flex-shrink:0">' + I.shield('#4A3A9E') + '</span><span style="font-size:14px;line-height:1.45;color:#3D2E8C">Połączenie jest szyfrowane. Nie przechowujemy skanów dowodu osobistego.</span></div>' + err;
         }
         S._banks = banks;
       }
@@ -491,15 +541,21 @@
     else if (a === 'age') { var ai = +v; S.kidAges = S.kidAges.indexOf(ai) >= 0 ? S.kidAges.filter(function (x) { return x !== ai; }) : S.kidAges.concat([ai]); }
     else if (a === 'terms') { if (e.target.closest('a')) return; S.terms = !S.terms; }
     else if (a === 'parent') {
-      var pb = missing([['p_imie', 'imię'], ['p_nazwisko', 'nazwisko'], ['p_tel', 'telefon'], ['p_email', 'e-mail'], ['p_haslo', 'hasło'], ['p_miasto', 'miasto']]);
-      if (pb.length) S.parentErr = 'Uzupełnij: ' + pb.join(', ') + '.';
+      var pbad = validate([['p_imie', 'name'], ['p_nazwisko', 'name'], ['p_tel', 'tel'], ['p_email', 'email'], ['p_haslo', 'pass'], ['p_ulica', 'street'], ['p_kod', 'zip'], ['p_miasto', 'name']]);
+      if (pbad) S.parentErr = 'Popraw zaznaczone pola (' + pbad + ').';
+      else if (!S.kidAges.length) S.parentErr = 'Zaznacz wiek przynajmniej jednego dziecka.';
       else if (!S.terms) S.parentErr = 'Zaakceptuj regulamin, żeby założyć konto.';
       else { S.parentErr = ''; location.hash = '#abonament'; return; }
     }
     else if (a === 'login') {
-      if (missing([['l_email', 'e-mail'], ['l_haslo', 'hasło']]).length) S.loginErr = 'Wpisz e-mail i hasło.';
+      if (validate([['l_email', 'email'], ['l_haslo', 'req']])) S.loginErr = 'Popraw zaznaczone pola.';
       else { S.loginErr = ''; location.hash = '#szukaj'; return; }
     }
+    else if (a === 'bankok') {
+      S.reg.id = 'returning';
+      setTimeout(function () { S.reg.id = 'ok'; if (current === 'weryfikacja') render(false); }, 1300);
+    }
+    else if (a === 'bankcancel') { S.reg.id = null; S.reg.err = 'Anulowano potwierdzenie w banku. Wybierz bank, żeby spróbować ponownie.'; }
     else if (a === 'reg') {
       var R = S.reg, F = S.form;
       R.err = '';
@@ -508,15 +564,15 @@
       else if (v === 'howto') R.howto = !R.howto;
       else if (v === 'next') {
         if (R.step === 1) {
-          var brak = missing([['imie', 'imię'], ['nazwisko', 'nazwisko'], ['tel', 'telefon'], ['email', 'e-mail'], ['haslo', 'hasło'], ['ulica', 'adres'], ['miasto', 'miasto']]);
-          if (brak.length) R.err = 'Uzupełnij: ' + brak.join(', ') + '.'; else R.step = 2;
+          var nbad = validate([['imie', 'name'], ['nazwisko', 'name'], ['ur', 'adult'], ['tel', 'tel'], ['email', 'email'], ['haslo', 'pass'], ['ulica', 'street'], ['kod', 'zip'], ['miasto', 'name']]);
+          if (nbad) R.err = 'Popraw zaznaczone pola (' + nbad + ').'; else R.step = 2;
         } else if (R.step === 2) { if (R.id === 'ok') R.step = 3; }
         else if (R.step === 3) { if (!R.file) R.err = 'Dodaj plik PDF z zaświadczeniem, żeby przejść dalej.'; else R.step = 4; }
       }
     }
     else if (a === 'bank') {
-      S.reg.bank = S._banks[+v]; S.reg.id = 'loading';
-      setTimeout(function () { S.reg.id = 'ok'; if (current === 'weryfikacja') render(true); }, 1800);
+      S.reg.bank = S._banks[+v]; S.reg.id = 'redirect'; S.reg.err = '';
+      setTimeout(function () { if (S.reg.id === 'redirect') { S.reg.id = 'consent'; if (current === 'weryfikacja') render(false); } }, 1500);
     }
     else if (a === 'pick') {
       var g = GROUPS[+v], o = g.opts[+p[2]], cur = S.picked[g.key] || [];
@@ -527,7 +583,15 @@
   });
   app.addEventListener('input', function (e) {
     var f = e.target.getAttribute && e.target.getAttribute('data-field');
-    if (f) S.form[f] = e.target.value;
+    if (f) {
+      S.form[f] = e.target.value;
+      if (S.fe[f]) {
+        delete S.fe[f];
+        e.target.classList.remove('bad');
+        e.target.removeAttribute('aria-invalid');
+        var m = document.getElementById('fe-' + f); if (m) m.remove();
+      }
+    }
   });
   app.addEventListener('change', function (e) {
     if (e.target.hasAttribute && e.target.hasAttribute('data-file') && e.target.files && e.target.files[0]) {
